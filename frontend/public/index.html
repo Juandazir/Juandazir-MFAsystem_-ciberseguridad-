@@ -350,12 +350,12 @@ body {
         </div>
       </div>
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
-        <div class="link" onclick="toggleCallMeBotConfig()" style="display:flex;align-items:center;gap:6px;font-size:13px;">🤖 Configurar CallMeBot WhatsApp gratis <span id="cmbCfgIndicator" style="font-size:11px;"></span></div>
-        <div id="callmebotConfigSection" style="display:none;margin-top:8px;">
-          <div class="form-group"><label>API Key de CallMeBot</label><input type="password" id="cmbApikey" placeholder="123456"><div class="hint">Obtén tu API Key gratis en <span class="link" onclick="window.open('https://www.callmebot.com/blog/free-api-whatsapp-messages/','_blank')">callmebot.com</span>. El usuario debe enviar "I allow callmebot" al número +34 644 57 93 46 primero.</div></div>
+        <div class="link" onclick="toggleTextMeBotConfig()" style="display:flex;align-items:center;gap:6px;font-size:13px;">🤖 Configurar TextMeBot WhatsApp <span id="tmbCfgIndicator" style="font-size:11px;"></span></div>
+        <div id="textmebotConfigSection" style="display:none;margin-top:8px;">
+          <div class="form-group"><label>API Key de TextMeBot</label><input type="password" id="tmbApikey" placeholder="123456"><div class="hint">Obtén tu API Key en <span class="link" onclick="window.open('https://textmebot.com/','_blank')">textmebot.com</span>. Tiene demo gratuita de 2 días, luego $1/mes para uso personal. No requiere que el usuario envíe un mensaje primero.</div></div>
           <div class="actions-row">
-            <button class="btn btn-primary btn-sm" onclick="saveCallMeBotConfig()">Guardar</button>
-            <span id="cmbTestResult" style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;"></span>
+            <button class="btn btn-primary btn-sm" onclick="saveTextMeBotConfig()">Guardar</button>
+            <span id="tmbTestResult" style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;"></span>
           </div>
         </div>
       </div>
@@ -1459,6 +1459,47 @@ async function saveCallMeBotConfig() {
     document.getElementById('cmbApikey').value = '';
     toast('🤖 CallMeBot configurado correctamente', 'success');
     loadCallMeBotConfig();
+  } else {
+    resultEl.textContent = '✗ ' + (data.error || 'Error');
+    resultEl.style.color = 'var(--danger)';
+  }
+}
+
+let tmbCfgLoaded = false;
+
+async function toggleTextMeBotConfig() {
+  const section = document.getElementById('textmebotConfigSection');
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+  if (!tmbCfgLoaded) await loadTextMeBotConfig();
+}
+
+async function loadTextMeBotConfig() {
+  const { ok, data } = await api('GET', '/api/admin/textmebot-config/', null, true);
+  if (!ok) return;
+  tmbCfgLoaded = true;
+  document.getElementById('tmbApikey').value = '';
+  const indicator = document.getElementById('tmbCfgIndicator');
+  if (data.apikey && data.apikey !== '') {
+    indicator.textContent = '✓ Configurado';
+    indicator.style.color = 'var(--success)';
+  } else {
+    indicator.textContent = '⚠ No configurado';
+    indicator.style.color = 'var(--warning)';
+  }
+}
+
+async function saveTextMeBotConfig() {
+  const body = { apikey: document.getElementById('tmbApikey').value.trim() };
+  if (!body.apikey) return toast('Ingresa la API Key de TextMeBot', 'error');
+  const resultEl = document.getElementById('tmbTestResult');
+  resultEl.innerHTML = '<span class="spinner"></span> Guardando...';
+  const { ok, data } = await api('PUT', '/api/admin/textmebot-config/', body, true);
+  if (ok) {
+    resultEl.textContent = '✓ Configuración guardada';
+    resultEl.style.color = 'var(--success)';
+    document.getElementById('tmbApikey').value = '';
+    toast('🤖 TextMeBot configurado correctamente', 'success');
+    loadTextMeBotConfig();
   } else {
     resultEl.textContent = '✗ ' + (data.error || 'Error');
     resultEl.style.color = 'var(--danger)';

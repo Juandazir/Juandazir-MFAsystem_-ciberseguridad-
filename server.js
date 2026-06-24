@@ -11,7 +11,7 @@ const DB_PATH = path.join(__dirname, 'database', 'data.json');
 const EMAIL_CONFIG_PATH = path.join(__dirname, 'database', 'email-config.json');
 const SMS_CARRIERS_CONFIG_PATH = path.join(__dirname, 'database', 'sms-carriers.json');
 const TWILIO_CONFIG_PATH = path.join(__dirname, 'database', 'twilio-config.json');
-const CALLMEBOT_CONFIG_PATH = path.join(__dirname, 'database', 'callmebot-config.json');
+const TEXTMEBOT_CONFIG_PATH = path.join(__dirname, 'database', 'textmebot-config.json');
 
 // Carriers de Colombia con sus gateways email->SMS
 const DEFAULT_SMS_CARRIERS = [
@@ -585,47 +585,47 @@ async function sendWhatsAppViaTwilio(phoneNumber, code) {
   }
 }
 
-// ─── CallMeBot (free WhatsApp API) ────────────────────────
-function getCallMeBotConfig() {
+// ─── TextMeBot (WhatsApp API) ────────────────────────
+function getTextMeBotConfig() {
   try {
-    if (fs.existsSync(CALLMEBOT_CONFIG_PATH)) {
-      return JSON.parse(fs.readFileSync(CALLMEBOT_CONFIG_PATH, 'utf8'));
+    if (fs.existsSync(TEXTMEBOT_CONFIG_PATH)) {
+      return JSON.parse(fs.readFileSync(TEXTMEBOT_CONFIG_PATH, 'utf8'));
     }
   } catch (e) { /* ignore */ }
-  return { apikey: process.env.CALLMEBOT_APIKEY || '' };
+  return { apikey: process.env.TEXTMEBOT_APIKEY || '' };
 }
 
-function saveCallMeBotConfig(cfg) {
+function saveTextMeBotConfig(cfg) {
   try {
-    const dir = path.dirname(CALLMEBOT_CONFIG_PATH);
+    const dir = path.dirname(TEXTMEBOT_CONFIG_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(CALLMEBOT_CONFIG_PATH, JSON.stringify(cfg, null, 2));
-    log('INFO', 'CallMeBot config saved');
+    fs.writeFileSync(TEXTMEBOT_CONFIG_PATH, JSON.stringify(cfg, null, 2));
+    log('INFO', 'TextMeBot config saved');
     return true;
-  } catch (e) { log('ERROR', 'CallMeBot config save error', { error: e.message }); return false; }
+  } catch (e) { log('ERROR', 'TextMeBot config save error', { error: e.message }); return false; }
 }
 
-async function sendWhatsAppViaCallMeBot(phoneNumber, code) {
-  const cfg = getCallMeBotConfig();
-  if (!cfg.apikey) return { sent: false, reason: 'CallMeBot no configurado' };
+async function sendWhatsAppViaTextMeBot(phoneNumber, code) {
+  const cfg = getTextMeBotConfig();
+  if (!cfg.apikey) return { sent: false, reason: 'TextMeBot no configurado' };
   try {
     const https = require('https');
     const text = `🔐 Tu código MFA es: ${code}. Válido por 5 minutos.`;
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phoneNumber)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(cfg.apikey)}`;
+    const url = `https://api.textmebot.com/send.php?recipient=${encodeURIComponent(phoneNumber)}&apikey=${encodeURIComponent(cfg.apikey)}&text=${encodeURIComponent(text)}`;
     await new Promise((resolve, reject) => {
       https.get(url, (res) => {
         let d = '';
         res.on('data', c => d += c);
         res.on('end', () => {
-          if (d.includes('OK') || d.includes('Message sent')) resolve(d);
+          if (d.includes('OK') || d.includes('Message sent') || d.includes('Success') || !d.includes('Error')) resolve(d);
           else reject(new Error(d.substring(0, 100)));
         });
       }).on('error', reject);
     });
-    log('INFO', 'WhatsApp sent via CallMeBot', { to: phoneNumber });
+    log('INFO', 'WhatsApp sent via TextMeBot', { to: phoneNumber });
     return { sent: true };
   } catch (e) {
-    log('ERROR', 'CallMeBot WhatsApp failed', { error: e.message });
+    log('ERROR', 'TextMeBot WhatsApp failed', { error: e.message });
     return { sent: false, reason: e.message };
   }
 }
@@ -823,25 +823,20 @@ async function handleAPI(req, res, pathname) {
       console.log(`  │  📱 Código SMS para ${destination.padEnd(22)} │`);
       console.log(`  │  🔑 ${code.padEnd(37)} │`);
       console.log(`  └────────────────────────────────────────┘\n`);
-      // Try Twilio SMS first, then WhatsApp, then CallMeBot, then email-to-SMS
+      // Try Twilio SMS first, then TextMeBot WhatsApp, then email-to-SMS
       let smsSent = false;
       const twilioResult = await sendSmsViaTwilio(destination, code);
       if (twilioResult.sent) { smsSent = true; }
       else {
-        log('WARN', 'Twilio SMS failed, trying WhatsApp', { destination, reason: twilioResult.reason });
-        const waResult = await sendWhatsAppViaTwilio(destination, code);
+        log('WARN', 'Twilio SMS failed, trying TextMeBot WhatsApp', { destination, reason: twilioResult.reason });
+        const waResult = await sendWhatsAppViaTextMeBot(destination, code);
         if (waResult.sent) { smsSent = true; }
         else {
-          log('WARN', 'Twilio WhatsApp also failed, trying CallMeBot', { reason: waResult.reason });
-          const cmbResult = await sendWhatsAppViaCallMeBot(destination, code);
-          if (cmbResult.sent) { smsSent = true; }
-          else {
-            log('WARN', 'CallMeBot also failed, trying email-to-SMS', { reason: cmbResult.reason });
-            const carrierId = body.carrierId || body.carrier || '';
-            const emailResult = await sendSmsViaEmail(destination, carrierId, code);
-            if (!emailResult.sent) {
-              log('WARN', 'All SMS delivery methods failed', { reason: emailResult.reason });
-            }
+          log('WARN', 'TextMeBot also failed, trying email-to-SMS', { reason: waResult.reason });
+          const carrierId = body.carrierId || body.carrier || '';
+          const emailResult = await sendSmsViaEmail(destination, carrierId, code);
+          if (!emailResult.sent) {
+            log('WARN', 'All SMS delivery methods failed', { reason: emailResult.reason });
           }
         }
       }
@@ -853,13 +848,9 @@ async function handleAPI(req, res, pathname) {
       console.log(`  │  📱 WhatsApp OTP para ${destination.padEnd(18)} │`);
       console.log(`  │  🔑 ${code.padEnd(37)} │`);
       console.log(`  └────────────────────────────────────────┘\n`);
-      const waResult = await sendWhatsAppViaTwilio(destination, code);
+      const waResult = await sendWhatsAppViaTextMeBot(destination, code);
       if (!waResult.sent) {
-        log('WARN', 'Twilio WhatsApp failed, trying CallMeBot', { destination, reason: waResult.reason });
-        const cmbResult = await sendWhatsAppViaCallMeBot(destination, code);
-        if (!cmbResult.sent) {
-          log('WARN', 'All WhatsApp delivery methods failed', { reason: cmbResult.reason });
-        }
+        log('WARN', 'TextMeBot WhatsApp failed', { destination, reason: waResult.reason });
       }
     } else {
       return sendError(res, 400, 'Tipo inválido. Use email o sms', 'INVALID_TYPE');
@@ -1205,20 +1196,20 @@ async function handleAPI(req, res, pathname) {
     return sendError(res, 405, 'Método no permitido', 'METHOD_NOT_ALLOWED');
   }
 
-  // ── GET /api/admin/callmebot-config/ ──
-  if (pathname === '/api/admin/callmebot-config/') {
+  // ── GET /api/admin/textmebot-config/ ──
+  if (pathname === '/api/admin/textmebot-config/') {
     const admin = requireAdmin(req, res);
     if (!admin) return;
     if (req.method === 'GET') {
-      const cfg = getCallMeBotConfig();
+      const cfg = getTextMeBotConfig();
       return sendJSON(res, 200, { ...cfg, apikey: cfg.apikey ? '********' : '' });
     }
     if (req.method === 'PUT') {
       const body = await parseBody(req);
-      const cfg = getCallMeBotConfig();
+      const cfg = getTextMeBotConfig();
       if (body.apikey !== undefined && body.apikey !== '********') cfg.apikey = body.apikey;
-      saveCallMeBotConfig(cfg);
-      return sendJSON(res, 200, { success: true, message: 'Configuración de CallMeBot guardada', ...cfg, apikey: '********' });
+      saveTextMeBotConfig(cfg);
+      return sendJSON(res, 200, { success: true, message: 'Configuración de TextMeBot guardada', ...cfg, apikey: '********' });
     }
     return sendError(res, 405, 'Método no permitido', 'METHOD_NOT_ALLOWED');
   }
