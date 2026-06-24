@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MFA Authentication System</title>
+<title>MFA Security System</title>
 <style>
 :root {
   --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #a5b4fc;
   --success: #10b981; --success-dark: #059669;
   --danger: #ef4444; --danger-dark: #dc2626;
-  --warning: #f59e0b; --warning-dark: #d97706;
+  --warning: #f59e0b;
   --info: #3b82f6;
   --bg: #0f172a; --bg-card: #1e293b; --bg-input: #334155;
   --text: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b;
@@ -22,14 +22,14 @@
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: var(--bg); color: var(--text); min-height:100vh;
-  display:flex; justify-content:center; align-items:center;
   background-image: radial-gradient(ellipse at 10% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
                     radial-gradient(ellipse at 90% 80%, rgba(16,185,129,0.1) 0%, transparent 50%);
 }
 ::-webkit-scrollbar { width:6px; }
 ::-webkit-scrollbar-track { background:var(--bg); }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-.app { width:100%; max-width:440px; padding:16px; }
+.app { width:100%; max-width:520px; padding:16px; margin:0 auto; }
+.app-wide { max-width:720px; }
 .card {
   background: var(--bg-card); border-radius: var(--radius);
   padding: 32px; box-shadow: var(--shadow);
@@ -39,38 +39,27 @@ body {
 @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 @keyframes spin { to { transform:rotate(360deg); } }
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-@keyframes checkmark { 0% { transform:scale(0); } 50% { transform:scale(1.2); } 100% { transform:scale(1); } }
 
 .header { text-align:center; margin-bottom:24px; }
 .header .logo { font-size:40px; margin-bottom:8px; }
 .header h1 { font-size:1.4rem; font-weight:700; background:linear-gradient(135deg,var(--primary-light),var(--success)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .header p { color:var(--text-secondary); font-size:0.85rem; margin-top:4px; }
 
-.steps { display:flex; justify-content:center; gap:6px; margin-bottom:24px; }
-.step {
-  width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  font-size:13px; font-weight:600; background:var(--bg-input); color:var(--text-muted);
-  transition:var(--transition); position:relative;
-}
-.step.active { background:var(--primary); color:#fff; box-shadow:0 0 12px rgba(99,102,241,0.4); }
-.step.done { background:var(--success); color:#fff; }
-.step + .step::before {
-  content:''; position:absolute; left:-9px; top:50%; width:6px; height:2px; background:var(--border);
-}
-
 .view { display:none; animation:slideUp 0.35s ease-out; }
 .view.active { display:block; }
 
 .form-group { margin-bottom:16px; }
 .form-group label { display:block; margin-bottom:6px; font-size:13px; font-weight:500; color:var(--text-secondary); }
-.form-group input {
+.form-group input, .form-group select {
   width:100%; padding:12px 14px; background:var(--bg-input); border:1px solid var(--border);
   border-radius:var(--radius-sm); color:var(--text); font-size:14px; transition:var(--transition);
 }
-.form-group input:focus { outline:none; border-color:var(--border-focus); box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
+.form-group select { cursor:pointer; }
+.form-group input:focus, .form-group select:focus { outline:none; border-color:var(--border-focus); box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
 .form-group input.error { border-color:var(--danger); }
 .form-group .hint { font-size:11px; color:var(--text-muted); margin-top:4px; }
+.form-row { display:flex; gap:12px; }
+.form-row .form-group { flex:1; }
 
 .password-strength { display:flex; gap:4px; margin-top:6px; }
 .password-strength .bar { flex:1; height:3px; border-radius:2px; background:var(--border); transition:var(--transition); }
@@ -79,10 +68,11 @@ body {
 .password-strength .bar.strong { background:var(--success); }
 
 .btn {
-  width:100%; padding:12px; border:none; border-radius:var(--radius-sm);
+  padding:12px; border:none; border-radius:var(--radius-sm);
   font-size:14px; font-weight:600; cursor:pointer; transition:var(--transition);
-  display:flex; align-items:center; justify-content:center; gap:8px;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
 }
+.btn-block { width:100%; }
 .btn:active { transform:scale(0.98); }
 .btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
 .btn-primary { background:var(--primary); color:#fff; }
@@ -93,10 +83,12 @@ body {
 .btn-danger:hover:not(:disabled) { background:var(--danger-dark); }
 .btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); }
 .btn-outline:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+.btn-sm { padding:8px 14px; font-size:12px; }
+.btn-xs { padding:4px 10px; font-size:11px; }
 
-.link { color:var(--primary-light); cursor:pointer; font-size:13px; text-decoration:none; }
+.link { color:var(--primary-light); cursor:pointer; font-size:13px; }
 .link:hover { text-decoration:underline; }
-.link-row { text-align:center; margin-top:12px; font-size:13px; color:var(--text-secondary); }
+.link-row { text-align:center; margin-top:16px; font-size:13px; color:var(--text-secondary); }
 
 .toast-container { position:fixed; top:20px; right:20px; z-index:1000; display:flex; flex-direction:column; gap:8px; }
 .toast {
@@ -119,50 +111,95 @@ body {
 .otp-timer .label { font-size:12px; color:var(--text-muted); }
 
 .qr-container { display:flex; flex-direction:column; align-items:center; margin:16px 0; padding:16px; background:var(--bg-input); border-radius:var(--radius-sm); }
-.qr-container canvas { border-radius:8px; background:#fff; }
+.qr-container img { border-radius:8px; background:#fff; }
 .qr-container .secret-box { font-family:monospace; font-size:12px; color:var(--text-secondary); background:var(--bg); padding:8px 12px; border-radius:4px; margin-top:10px; word-break:break-all; text-align:center; width:100%; }
-.qr-container .copy-btn { margin-top:6px; padding:4px 12px; font-size:11px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text-secondary); cursor:pointer; }
-.qr-container .copy-btn:hover { border-color:var(--primary); color:var(--primary); }
+.qr-container .copy-btn { margin-top:6px; padding:4px 12px; font-size:11px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text-secondary); cursor:pointer; display:inline-block; }
 
 .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
 .badge-success { background:rgba(16,185,129,0.15); color:#6ee7b7; }
 .badge-danger { background:rgba(239,68,68,0.15); color:#fca5a5; }
 .badge-info { background:rgba(59,130,246,0.15); color:#93c5fd; }
+.badge-warning { background:rgba(245,158,11,0.15); color:#fde68a; }
 
-.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0; }
-.info-item { background:var(--bg-input); padding:12px; border-radius:var(--radius-sm); }
-.info-item .label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
-.info-item .value { font-size:14px; color:var(--text); margin-top:2px; font-weight:500; }
-.info-item.full { grid-column:1/-1; }
+.spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; display:inline-block; }
 
-.action-row { display:flex; gap:8px; margin-top:16px; }
-.action-row .btn { flex:1; }
+/* Profile Dashboard */
+.profile-header { text-align:center; margin-bottom:20px; }
+.profile-avatar {
+  width:72px; height:72px; border-radius:50%; background:var(--primary);
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; font-weight:700; color:#fff; margin:0 auto 12px;
+}
+.profile-header h2 { font-size:1.2rem; font-weight:600; }
+.profile-header p { color:var(--text-secondary); font-size:13px; }
 
-.spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
-.check-icon { display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:rgba(16,185,129,0.15); color:var(--success); font-size:28px; margin:0 auto 12px; animation:checkmark 0.5s ease-out; }
+.section { margin-bottom:24px; }
+.section-title { font-size:1rem; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.section-title .badge { font-size:10px; }
 
-@media (max-width:480px) { .app { padding:8px; } .card { padding:20px; } .info-grid { grid-template-columns:1fr; } }
+.info-grid { display:grid; gap:8px; }
+.info-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 14px; background:var(--bg-input); border-radius:var(--radius-sm);
+}
+.info-row .label { font-size:12px; color:var(--text-muted); }
+.info-row .value { font-size:13px; color:var(--text); font-weight:500; }
+
+.mfa-method {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px; background:var(--bg-input); border-radius:var(--radius-sm); margin-bottom:8px;
+  border:1px solid var(--border); transition:var(--transition);
+}
+.mfa-method .left { display:flex; align-items:center; gap:12px; }
+.mfa-method .left .icon { font-size:20px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:var(--bg); }
+.mfa-method .left .info .name { font-size:13px; font-weight:500; }
+.mfa-method .left .info .desc { font-size:11px; color:var(--text-muted); }
+
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:900;
+  display:none; align-items:center; justify-content:center; padding:16px;
+}
+.modal-overlay.active { display:flex; }
+.modal {
+  background:var(--bg-card); border-radius:var(--radius); padding:24px;
+  max-width:440px; width:100%; border:1px solid var(--border);
+  animation:slideUp 0.3s ease-out; max-height:90vh; overflow-y:auto;
+}
+.modal h3 { font-size:1.1rem; margin-bottom:16px; }
+
+.actions-row { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.actions-row .btn { flex:1; min-width:100px; }
+
+.mfa-selector { display:grid; gap:8px; margin-bottom:16px; }
+.mfa-selector .mfa-option {
+  padding:14px; background:var(--bg-input); border:2px solid var(--border); border-radius:var(--radius-sm);
+  cursor:pointer; transition:var(--transition); display:flex; align-items:center; gap:12px;
+}
+.mfa-selector .mfa-option:hover { border-color:var(--primary); }
+.mfa-selector .mfa-option.selected { border-color:var(--primary); background:rgba(99,102,241,0.1); }
+.mfa-selector .mfa-option .radio { width:18px; height:18px; border-radius:50%; border:2px solid var(--text-muted); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.mfa-selector .mfa-option.selected .radio { border-color:var(--primary); }
+.mfa-selector .mfa-option.selected .radio::after { content:''; width:10px; height:10px; border-radius:50%; background:var(--primary); }
+
+.empty-state { text-align:center; padding:32px; color:var(--text-muted); font-size:13px; }
+
+@media (max-width:480px) { .app { padding:8px; } .card { padding:20px; } .form-row { flex-direction:column; gap:0; } }
 </style>
 </head>
 <body>
 
 <div class="toast-container" id="toastContainer"></div>
 
-<div class="app">
+<div class="app" id="appContainer">
   <div class="card">
+
     <div class="header">
       <div class="logo">🔐</div>
       <h1>Sistema de Autenticación MFA</h1>
-      <p>Inicia sesión de forma segura con verificación en dos pasos</p>
+      <p>Protege tu cuenta con verificación en múltiples pasos</p>
     </div>
 
-    <div class="steps" id="steps">
-      <div class="step active" id="step1">1</div>
-      <div class="step" id="step2">2</div>
-      <div class="step" id="step3">3</div>
-    </div>
-
-    <!-- ======== LOGIN VIEW ======== -->
+    <!-- ===== LOGIN VIEW ===== -->
     <div class="view active" id="viewLogin">
       <h2 style="font-size:1.1rem;margin-bottom:16px;">Iniciar Sesión</h2>
       <div class="form-group">
@@ -173,13 +210,18 @@ body {
         <label>Contraseña</label>
         <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
       </div>
-      <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">Iniciar Sesión</button>
+      <button class="btn btn-primary btn-block" id="loginBtn" onclick="handleLogin()">Iniciar Sesión</button>
+      <div class="link-row"><span class="link" onclick="showView('forgotPassword')">¿Olvidaste tu contraseña?</span></div>
       <div class="link-row">¿No tienes cuenta? <span class="link" onclick="showView('register')">Regístrate aquí</span></div>
     </div>
 
-    <!-- ======== REGISTER VIEW ======== -->
+    <!-- ===== REGISTER VIEW ===== -->
     <div class="view" id="viewRegister">
       <h2 style="font-size:1.1rem;margin-bottom:16px;">Crear Cuenta</h2>
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="regName" placeholder="Tu nombre" autocomplete="name">
+      </div>
       <div class="form-group">
         <label>Correo electrónico</label>
         <input type="email" id="regEmail" placeholder="ejemplo@correo.com" autocomplete="email">
@@ -193,80 +235,281 @@ body {
         <label>Confirmar contraseña</label>
         <input type="password" id="regConfirm" placeholder="Repite la contraseña" autocomplete="new-password">
       </div>
-      <button class="btn btn-success" id="regBtn" onclick="handleRegister()">Crear Cuenta</button>
+      <button class="btn btn-success btn-block" id="regBtn" onclick="handleRegister()">Crear Cuenta</button>
       <div class="link-row">¿Ya tienes cuenta? <span class="link" onclick="showView('login')">Inicia sesión</span></div>
     </div>
 
-    <!-- ======== MFA VERIFY VIEW ======== -->
+    <!-- ===== MFA VERIFY VIEW ===== -->
     <div class="view" id="viewMfaVerify">
       <h2 style="font-size:1.1rem;margin-bottom:16px;">Verificación de Dos Factores</h2>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Elige un método de verificación e ingresa el código.</p>
+
+      <div class="mfa-selector" id="mfaMethodSelector"></div>
+
+      <div id="mfaCodeSection" style="display:none;">
+        <div id="mfaSendSection" style="display:none;">
+          <div id="mfaCarrierSelector" style="display:none;margin-bottom:8px;">
+            <select id="mfaCarrierSelect" style="width:100%;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;">
+              <option value="">Selecciona tu operador móvil (para SMS real)</option>
+            </select>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">El SMS se envía vía email-to-SMS gateway según tu operador</div>
+          </div>
+          <button class="btn btn-primary btn-block" id="mfaSendCodeBtn" onclick="handleMfaSendCode()">Enviar Código</button>
+          <div style="text-align:center;margin:8px 0;color:var(--text-muted);font-size:11px;" id="mfaSentInfo"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Código de verificación</label>
+          <input type="text" id="mfaOtpInput" class="otp-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+        </div>
+
+        <div class="otp-timer" id="mfaOtpTimer" style="display:none;">
+          <div class="countdown" id="mfaCountdown">--</div>
+          <div class="label">segundos restantes</div>
+        </div>
+
+        <button class="btn btn-success btn-block" id="mfaVerifyBtn" onclick="handleMfaVerify()">Verificar</button>
+      </div>
+
+      <div class="link-row"><span class="link" onclick="showView('login')">← Cancelar</span></div>
+    </div>
+
+    <!-- ===== FORGOT PASSWORD VIEW ===== -->
+    <div class="view" id="viewForgotPassword">
+      <h2 style="font-size:1.1rem;margin-bottom:16px;">Recuperar Contraseña</h2>
       <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">
-        Ingresa el código de 6 dígitos generado por tu aplicación autenticadora.
+        Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
       </p>
       <div class="form-group">
-        <label>Código OTP</label>
-        <input type="text" id="mfaOtp" class="otp-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+        <label>Correo electrónico</label>
+        <input type="email" id="fpEmail" placeholder="tu@email.com" autocomplete="email">
       </div>
-      <div class="otp-timer" id="otpTimer">
-        <div class="countdown" id="countdown">--</div>
-        <div class="label">segundos restantes</div>
-      </div>
-      <button class="btn btn-success" id="mfaVerifyBtn" onclick="handleMfaVerify()">Verificar e Ingresar</button>
-      <div class="link-row"><span class="link" onclick="showView('login')">← Volver al inicio</span></div>
-      <div id="mfaError" style="margin-top:12px;display:none;" class="badge badge-danger" style="justify-content:center;padding:10px;"></div>
+      <button class="btn btn-primary btn-block" id="fpBtn" onclick="handleForgotPassword()">Enviar Enlace</button>
+      <div class="link-row"><span class="link" onclick="showView('login')">← Volver al inicio de sesión</span></div>
     </div>
 
-    <!-- ======== DASHBOARD VIEW ======== -->
+    <!-- ===== RESET PASSWORD VIEW ===== -->
+    <div class="view" id="viewResetPassword">
+      <h2 style="font-size:1.1rem;margin-bottom:16px;">Restablecer Contraseña</h2>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">
+        Ingresa el token de recuperación y tu nueva contraseña.
+      </p>
+      <div class="form-group">
+        <label>Token de recuperación</label>
+        <input type="text" id="rpToken" placeholder="Pega el token aquí" style="font-size:11px;word-break:break-all;">
+        <div class="hint">Revisa la consola del servidor o el toast de desarrollo</div>
+      </div>
+      <div class="form-group">
+        <label>Nueva contraseña</label>
+        <input type="password" id="rpPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>Confirmar nueva contraseña</label>
+        <input type="password" id="rpConfirm" placeholder="Repite la contraseña" autocomplete="new-password">
+      </div>
+      <button class="btn btn-success btn-block" id="rpBtn" onclick="handleResetPassword()">Restablecer Contraseña</button>
+      <div class="link-row"><span class="link" onclick="showView('login')">← Volver al inicio de sesión</span></div>
+    </div>
+
+    <!-- ===== ADMIN VIEW ===== -->
+    <div class="view" id="viewAdmin">
+      <h2 style="font-size:1.1rem;margin-bottom:16px;">⚙️ Administración de Usuarios</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;" id="adminStats"></div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+        <input type="text" id="adminSearch" placeholder="Buscar por email o nombre..." style="flex:1;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;" oninput="renderAdminUsers()">
+        <button class="btn btn-outline btn-sm" onclick="refreshAdminPanel()">🔄</button>
+      </div>
+      <div id="adminUsersList"></div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
+        <div class="link" onclick="toggleEmailConfig()" style="display:flex;align-items:center;gap:6px;font-size:13px;">📧 Configurar Correo SMTP <span id="emailCfgIndicator" style="font-size:11px;"></span></div>
+        <div id="emailConfigSection" style="display:none;margin-top:8px;">
+          <div class="form-row">
+            <div class="form-group"><label>Host</label><input type="text" id="smtpHost" value="smtp.gmail.com" placeholder="smtp.gmail.com"></div>
+            <div class="form-group" style="max-width:80px;"><label>Puerto</label><input type="number" id="smtpPort" value="587" placeholder="587"></div>
+          </div>
+          <div class="form-group"><label>Usuario SMTP (tu email)</label><input type="email" id="smtpUser" placeholder="tucorreo@gmail.com"></div>
+          <div class="form-group"><label>Contraseña de Aplicación</label><input type="password" id="smtpPass" placeholder="App Password de Gmail"><div class="hint">Para Gmail: genera una <span class="link" onclick="window.open('https://myaccount.google.com/apppasswords','_blank')">Contraseña de Aplicación</span> en tu cuenta Google</div></div>
+          <div class="form-group"><label>Correo remitente (opcional)</label><input type="email" id="smtpFrom" placeholder="dejar vacío para usar el mismo"></div>
+          <div class="actions-row">
+            <button class="btn btn-primary btn-sm" onclick="saveEmailConfig()">Guardar y Probar</button>
+            <span id="smtpTestResult" style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;"></span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+        <div class="link" onclick="toggleTwilioConfig()" style="display:flex;align-items:center;gap:6px;font-size:13px;">💬 Configurar Twilio SMS/WhatsApp <span id="twilioCfgIndicator" style="font-size:11px;"></span></div>
+        <div id="twilioConfigSection" style="display:none;margin-top:8px;">
+          <div class="form-group"><label>Account SID</label><input type="text" id="twilioAccountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
+          <div class="form-group"><label>Auth Token</label><input type="password" id="twilioAuthToken" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"><div class="hint">Consíguelos en <span class="link" onclick="window.open('https://console.twilio.com','_blank')">Twilio Console</span></div></div>
+          <div class="form-group"><label>Número SMS (Twilio)</label><input type="text" id="twilioFromNumber" placeholder="+1234567890"><div class="hint">Número comprado en Twilio con capacidad SMS</div></div>
+          <div class="form-group"><label>Número WhatsApp (Twilio Sandbox o aprobado)</label><input type="text" id="twilioWhatsappFrom" placeholder="+14155238886"><div class="hint">Sandbox: +14155238886. Actívalo en Twilio Console → Messaging → Try it out → Send a WhatsApp message</div></div>
+          <div class="actions-row">
+            <button class="btn btn-primary btn-sm" onclick="saveTwilioConfig()">Guardar y Probar</button>
+            <span id="twilioTestResult" style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;"></span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+        <div class="link" onclick="toggleCallMeBotConfig()" style="display:flex;align-items:center;gap:6px;font-size:13px;">🤖 Configurar CallMeBot WhatsApp gratis <span id="cmbCfgIndicator" style="font-size:11px;"></span></div>
+        <div id="callmebotConfigSection" style="display:none;margin-top:8px;">
+          <div class="form-group"><label>API Key de CallMeBot</label><input type="password" id="cmbApikey" placeholder="123456"><div class="hint">Obtén tu API Key gratis en <span class="link" onclick="window.open('https://www.callmebot.com/blog/free-api-whatsapp-messages/','_blank')">callmebot.com</span>. El usuario debe enviar "I allow callmebot" al número +34 644 57 93 46 primero.</div></div>
+          <div class="actions-row">
+            <button class="btn btn-primary btn-sm" onclick="saveCallMeBotConfig()">Guardar</button>
+            <span id="cmbTestResult" style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;"></span>
+          </div>
+        </div>
+      </div>
+      <div class="link-row" style="margin-top:12px;"><span class="link" onclick="showView('dashboard')">← Volver al Panel</span></div>
+    </div>
+
+    <!-- ===== DASHBOARD VIEW ===== -->
     <div class="view" id="viewDashboard">
-      <div style="text-align:center;margin-bottom:16px;">
-        <div class="check-icon">✓</div>
-        <h2 style="font-size:1.1rem;color:var(--success);">Autenticación Exitosa</h2>
+      <div class="profile-header">
+        <div class="profile-avatar" id="dashAvatar">U</div>
+        <h2 id="dashName">Usuario</h2>
+        <p id="dashEmailDisplay">email@correo.com</p>
+        <div style="margin-top:8px;"><span class="badge badge-success" id="dashMfaBadge">✓ Seguro</span></div>
       </div>
-      <div class="info-grid">
-        <div class="info-item"><div class="label">ID</div><div class="value" id="dashId">-</div></div>
-        <div class="info-item"><div class="label">Email</div><div class="value" id="dashEmail">-</div></div>
-        <div class="info-item"><div class="label">MFA</div><div class="value"><span id="dashMfa" class="badge badge-success">Habilitado</span></div></div>
-        <div class="info-item"><div class="label">Creado</div><div class="value" id="dashCreated">-</div></div>
-        <div class="info-item full"><div class="label">Token</div><div class="value" style="font-size:10px;word-break:break-all;" id="dashToken">-</div></div>
-      </div>
-      <div class="action-row" id="dashActions">
-        <button class="btn btn-primary" id="dashSetupBtn" onclick="showView('mfaSetup')">⚙️ Configurar MFA</button>
-        <button class="btn btn-outline" onclick="handleLogout()">Cerrar Sesión</button>
-      </div>
-      <div id="dashSuccessMsg" style="display:none;text-align:center;margin-top:12px;padding:10px;background:rgba(16,185,129,0.1);border-radius:8px;border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;font-size:13px;">
-        ✅ MFA activo — tu cuenta está protegida con verificación en dos pasos
-      </div>
-    </div>
 
-    <!-- ======== MFA SETUP VIEW ======== -->
-    <div class="view" id="viewMfaSetup">
-      <h2 style="font-size:1.1rem;margin-bottom:16px;">Configurar MFA</h2>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
-        Escanea este código QR con tu aplicación autenticadora preferida
-        (Google Authenticator, Authy, Microsoft Authenticator, etc.)
-      </p>
-      <div class="qr-container" id="qrContainer">
-        <img id="qrImage" class="qr-image" alt="Código QR" style="width:200px;height:200px;border-radius:8px;background:#fff;">
-        <div class="secret-box" id="secretBox">-</div>
-        <button class="copy-btn" onclick="copySecret()">📋 Copiar clave secreta</button>
-        <button class="copy-btn" onclick="copyOtpauthUrl()" style="margin-top:4px;">🔗 Copiar URL OTPAuth</button>
+      <div class="section">
+        <div class="section-title">👤 Información Personal</div>
+        <div class="info-grid">
+          <div class="info-row"><span class="label">Nombre</span><span class="value" id="profName">-</span></div>
+          <div class="info-row"><span class="label">Email</span><span class="value" id="profEmail">-</span></div>
+          <div class="info-row"><span class="label">Email verificado</span><span class="value" id="profEmailVerified">-</span></div>
+          <div class="info-row"><span class="label">Teléfono</span><span class="value" id="profPhone">-</span></div>
+          <div class="info-row"><span class="label">Teléfono verificado</span><span class="value" id="profPhoneVerified">-</span></div>
+          <div class="info-row"><span class="label">Miembro desde</span><span class="value" id="profCreated">-</span></div>
+        </div>
+        <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px;" onclick="showEditProfile()">✏️ Editar Perfil</button>
       </div>
-      <div class="form-group">
-        <label>Verifica escaneando el código QR e ingresando el código generado:</label>
-        <input type="text" id="setupOtp" class="otp-input" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+
+      <div class="section">
+        <div class="section-title">🔒 Métodos de Autenticación</div>
+        <div id="mfaMethodsList"></div>
       </div>
-      <button class="btn btn-success" id="setupBtn" onclick="handleSetupMfa()">Verificar y Activar MFA</button>
-      <div class="link-row"><span class="link" onclick="showView('dashboard')">← Volver al Dashboard</span></div>
+
+      <div class="section">
+        <div class="section-title">🔑 Seguridad</div>
+        <button class="btn btn-outline btn-block btn-sm" onclick="showChangePassword()">Cambiar Contraseña</button>
+        <button class="btn btn-outline btn-block btn-sm" style="margin-top:6px;" onclick="refreshProfile()">🔄 Recargar Perfil</button>
+        <button class="btn btn-outline btn-block btn-sm" style="margin-top:6px;border-color:var(--warning);color:var(--warning);" id="dashAdminBtn" onclick="showAdminPanel()" hidden>⚙️ Panel de Administración</button>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn btn-danger" onclick="handleLogout()">Cerrar Sesión</button>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Edit Profile ===== -->
+<div class="modal-overlay" id="modalEditProfile">
+  <div class="modal">
+    <h3>✏️ Editar Perfil</h3>
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" id="editName" placeholder="Tu nombre">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <div style="display:flex;gap:8px;">
+        <input type="email" id="editEmail" placeholder="nuevo@email.com" style="flex:1;">
+        <button class="btn btn-outline btn-sm" id="editEmailVerifyBtn" onclick="handleSendEmailOtp()">Verificar</button>
+      </div>
+      <div id="editEmailOtpSection" style="display:none;margin-top:8px;">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="editEmailOtp" placeholder="Código OTP" maxlength="6" style="flex:1;text-align:center;font-size:18px;letter-spacing:4px;">
+          <button class="btn btn-success btn-sm" onclick="handleVerifyEmailOtp()">OK</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Teléfono</label>
+      <div style="display:flex;gap:8px;">
+        <input type="tel" id="editPhone" placeholder="+573001234567" style="flex:1;">
+        <button class="btn btn-outline btn-sm" id="editPhoneVerifyBtn" onclick="handleSendSmsOtp()">Verificar</button>
+      </div>
+      <div id="editPhoneCarrierSection" style="margin-top:6px;">
+        <select id="editPhoneCarrier" style="width:100%;padding:6px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:11px;">
+          <option value="">Selecciona tu operador (para SMS real)</option>
+        </select>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">El SMS se envía vía email-to-SMS gateway. Los códigos también se muestran en pantalla.</div>
+      </div>
+      <div id="editPhoneOtpSection" style="display:none;margin-top:8px;">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="editPhoneOtp" placeholder="Código OTP" maxlength="6" style="flex:1;text-align:center;font-size:18px;letter-spacing:4px;">
+          <button class="btn btn-success btn-sm" onclick="handleVerifyPhoneOtp()">OK</button>
+        </div>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-primary" onclick="handleSaveProfile()">Guardar Cambios</button>
+      <button class="btn btn-outline" onclick="closeModal('modalEditProfile')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: MFA Method Detail ===== -->
+<div class="modal-overlay" id="modalMfaDetail">
+  <div class="modal">
+    <h3 id="mfaDetailTitle">Configurar Método</h3>
+    <div id="mfaDetailBody"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: TOTP Setup ===== -->
+<div class="modal-overlay" id="modalTotpSetup">
+  <div class="modal">
+    <h3>🔐 Configurar App Autenticadora</h3>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+      Escanea este código QR con Google Authenticator, Authy o Microsoft Authenticator.
+    </p>
+    <div class="qr-container">
+      <img id="totpQrImage" alt="QR" style="width:200px;height:200px;border-radius:8px;background:#fff;">
+      <div class="secret-box" id="totpSecretBox">-</div>
+      <button class="copy-btn" onclick="copyText(document.getElementById('totpSecretBox').textContent, 'Clave secreta copiada')">📋 Copiar clave</button>
+    </div>
+    <div class="form-group">
+      <label>Ingresa el código de 6 dígitos de la app para confirmar:</label>
+      <input type="text" id="totpSetupOtp" class="otp-input" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-success btn-block" id="totpSetupBtn" onclick="handleTotpVerify()">Verificar y Activar TOTP</button>
+    </div>
+    <div class="link-row"><span class="link" onclick="closeModal('modalTotpSetup')">Cancelar</span></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Change Password ===== -->
+<div class="modal-overlay" id="modalChangePassword">
+  <div class="modal">
+    <h3>🔑 Cambiar Contraseña</h3>
+    <div class="form-group">
+      <label>Contraseña actual</label>
+      <input type="password" id="cpCurrent" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="form-group">
+      <label>Nueva contraseña</label>
+      <input type="password" id="cpNew" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+    </div>
+    <div class="form-group">
+      <label>Confirmar nueva contraseña</label>
+      <input type="password" id="cpConfirm" placeholder="Repite la contraseña" autocomplete="new-password">
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-primary btn-block" id="cpBtn" onclick="handleChangePassword()">Cambiar Contraseña</button>
+    </div>
+    <div class="link-row"><span class="link" onclick="closeModal('modalChangePassword')">Cancelar</span></div>
   </div>
 </div>
 
 <script>
 // ─── State ─────────────────────────────────────────────────────
-const state = { userId: null, email: '', token: '', tempToken: '', mfaEnabled: false };
+const state = { userId: null, email: '', name: '', token: '', tempToken: '', mfaTempUserId: null, selectedMfaMethod: '', _otpauthUrl: '', profile: null };
 const API = '';
 
-// ─── Toast System ──────────────────────────────────────────────
+// ─── Toast ──────────────────────────────────────────────────
 function toast(message, type = 'info', duration = 4000) {
   const container = document.getElementById('toastContainer');
   const icons = { success: '✓', error: '✗', info: 'ℹ', warning: '⚠' };
@@ -277,37 +520,28 @@ function toast(message, type = 'info', duration = 4000) {
   setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(100px)'; el.style.transition = 'all 0.3s'; setTimeout(() => el.remove(), 300); }, duration);
 }
 
-// ─── View Management ───────────────────────────────────────────
+// ─── Modals ─────────────────────────────────────────────────
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', (e) => { if (e.target === el) el.classList.remove('active'); });
+});
+
+// ─── View Management ───────────────────────────────────────
 let currentView = 'login';
 function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const view = document.getElementById('view' + name.charAt(0).toUpperCase() + name.slice(1));
   if (view) view.classList.add('active');
   currentView = name;
-
-  // Update steps
-  const steps = ['step1','step2','step3'];
-  const stepMap = { login:0, register:0, mfaVerify:1, dashboard:2, mfaSetup:2 };
-  const idx = stepMap[name] || 0;
-  steps.forEach((id,i) => {
-    const el = document.getElementById(id);
-    el.className = 'step' + (i < idx ? ' done' : i === idx ? ' active' : '');
-  });
-
-  // Init specific views
-  if (name === 'mfaVerify') initMfaVerify();
-  if (name === 'mfaSetup') initMfaSetup();
 }
+
 document.querySelectorAll('.link').forEach(el => {
-  const match = el.textContent.match(/Regístrate|Inicia sesión|Volver|Dashboard|inicio/);
-  if (match) {
-    const targets = { Regístrate:'register', 'Inicia sesión':'login', Volver:'login', Dashboard:'dashboard', inicio:'login' };
-    const target = targets[match[0]];
-    if (target) el.onclick = () => showView(target);
-  }
+  const m = el.textContent.match(/Regístrate|Inicia sesión|Cancelar|inicio/);
+  if (m) { const t = { Regístrate:'register', 'Inicia sesión':'login', Cancelar:'login', inicio:'login' }[m[0]]; if (t) el.onclick = () => showView(t); }
 });
 
-// ─── Password Strength ─────────────────────────────────────────
+// ─── Password Strength ─────────────────────────────────────
 function checkPasswordStrength(pw) {
   const bars = document.querySelectorAll('#pwStrength .bar');
   let score = 0;
@@ -315,39 +549,46 @@ function checkPasswordStrength(pw) {
   if (pw.length >= 10) score++;
   if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
   if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
-  const labels = ['','',' Débil',' Media',' Fuerte',' Muy fuerte'];
-  bars.forEach((b,i) => {
-    b.className = 'bar' + (i < score ? (score <= 2 ? ' weak' : score <= 3 ? ' medium' : ' strong') : '');
-  });
+  bars.forEach((b,i) => { b.className = 'bar' + (i < score ? (score <= 2 ? ' weak' : score <= 3 ? ' medium' : ' strong') : ''); });
 }
 
-// ─── API Helper ────────────────────────────────────────────────
+// ─── API Helper ────────────────────────────────────────────
 async function api(method, path, body, useToken = false) {
   const headers = { 'Content-Type': 'application/json' };
-  if (useToken && state.token) headers['Authorization'] = `Bearer ${state.token}`;
+  if (typeof useToken === 'string') {
+    headers['Authorization'] = `Bearer ${useToken}`;
+  } else if (useToken && state.token) {
+    headers['Authorization'] = `Bearer ${state.token}`;
+  }
   const res = await fetch(`${API}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
   const data = await res.json();
   return { ok: res.ok, status: res.status, data };
 }
 
-// ─── Register ──────────────────────────────────────────────────
+// ─── Copy ──────────────────────────────────────────────────
+function copyText(text, msg) {
+  navigator.clipboard.writeText(text).then(() => toast(msg, 'success')).catch(() => toast('No se pudo copiar', 'error'));
+}
+
+// ─── Register ──────────────────────────────────────────────
 async function handleRegister() {
+  const name = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
   const confirm = document.getElementById('regConfirm').value;
-  if (!email || !password || !confirm) return toast('Todos los campos son obligatorios', 'error');
+  if (!name || !email || !password || !confirm) return toast('Todos los campos son obligatorios', 'error');
   if (password !== confirm) return toast('Las contraseñas no coinciden', 'error');
   if (password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Formato de email inválido', 'error');
 
   const btn = document.getElementById('regBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creando...';
-  const { ok, data } = await api('POST', '/api/accounts/register/', { email, password });
+  const { ok, data } = await api('POST', '/api/accounts/register/', { email, password, name });
   btn.disabled = false; btn.textContent = 'Crear Cuenta';
   if (ok) { toast('Cuenta creada exitosamente', 'success'); document.getElementById('loginEmail').value = email; setTimeout(() => showView('login'), 1200); }
   else toast(data.error || 'Error al crear cuenta', 'error');
 }
 
-// ─── Login ─────────────────────────────────────────────────────
+// ─── Login ─────────────────────────────────────────────────
 async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -359,153 +600,872 @@ async function handleLogin() {
 
   if (ok) {
     if (data.mfa_required) {
-      state.userId = data.user_id;
+      state.mfaTempUserId = data.user_id;
       state.email = email;
       state.tempToken = data.temp_token || '';
+      initMfaVerify(data.mfa_methods || []);
       showView('mfaVerify');
-      toast('Ingresa el código de tu app autenticadora', 'info');
     } else if (data.access) {
       state.token = data.access;
       state.email = email;
-      if (data.user) { state.userId = data.user.id; state.mfaEnabled = data.user.mfa_enabled; }
-      enterDashboard(data);
+      if (data.user) { state.userId = data.user.id; state.name = data.user.name || email.split('@')[0]; }
+      await loadDashboard();
       toast('Inicio de sesión exitoso', 'success');
     }
   } else {
-    if (status === 423) { toast(`Cuenta bloqueada. Espera ${Math.ceil(data.retryAfter / 60)} min`, 'warning'); }
+    if (status === 423) toast(`Cuenta bloqueada. Espera ${Math.ceil(data.retryAfter / 60)} min`, 'warning');
     else toast(data.error || 'Credenciales inválidas', 'error');
   }
 }
 
-// ─── MFA Verify ────────────────────────────────────────────────
-let otpInterval = null;
-function initMfaVerify() {
-  document.getElementById('mfaOtp').value = '';
-  document.getElementById('mfaOtp').focus();
-  if (otpInterval) clearInterval(otpInterval);
-  updateCountdown();
-  otpInterval = setInterval(updateCountdown, 1000);
+// ─── MFA Verify ────────────────────────────────────────────
+function initMfaVerify(methods) {
+  const selector = document.getElementById('mfaMethodSelector');
+  const codeSection = document.getElementById('mfaCodeSection');
+  const sendSection = document.getElementById('mfaSendSection');
+  document.getElementById('mfaOtpInput').value = '';
+  document.getElementById('mfaSentInfo').textContent = '';
+
+  selector.innerHTML = '';
+  if (!methods || methods.length === 0) {
+    selector.innerHTML = '<div class="empty-state">No hay métodos MFA disponibles</div>';
+    codeSection.style.display = 'none';
+    return;
+  }
+
+  methods.forEach((m, idx) => {
+    const icons = { totp: '🔐', sms: '📱', whatsapp: '💬', email: '📧' };
+    const div = document.createElement('div');
+    div.className = 'mfa-option' + (idx === 0 ? ' selected' : '');
+    div.dataset.method = m.method;
+    div.innerHTML = `<div class="radio"></div><span>${icons[m.method] || '🔒'} ${m.label}</span>`;
+    div.onclick = () => {
+      selector.querySelectorAll('.mfa-option').forEach(o => o.classList.remove('selected'));
+      div.classList.add('selected');
+      state.selectedMfaMethod = m.method;
+      document.getElementById('mfaOtpInput').value = '';
+      document.getElementById('mfaSentInfo').textContent = '';
+      sendSection.style.display = (m.method === 'sms' || m.method === 'whatsapp' || m.method === 'email') ? 'block' : 'none';
+      document.getElementById('mfaOtpTimer').style.display = (m.method === 'totp') ? 'block' : 'none';
+      const carrierSel = document.getElementById('mfaCarrierSelector');
+      if (carrierSel) {
+        carrierSel.style.display = (m.method === 'sms') ? 'block' : 'none';
+        if (m.method === 'sms') loadSmsCarriers('mfaCarrierSelect');
+      }
+    };
+    selector.appendChild(div);
+  });
+
+  state.selectedMfaMethod = methods[0].method;
+  codeSection.style.display = 'block';
+  sendSection.style.display = (methods[0].method === 'sms' || methods[0].method === 'whatsapp' || methods[0].method === 'email') ? 'block' : 'none';
+  document.getElementById('mfaOtpTimer').style.display = (methods[0].method === 'totp') ? 'block' : 'none';
+  const carrierSel = document.getElementById('mfaCarrierSelector');
+  if (carrierSel) {
+    carrierSel.style.display = (methods[0].method === 'sms') ? 'block' : 'none';
+    if (methods[0].method === 'sms') loadSmsCarriers('mfaCarrierSelect');
+  }
+
+  if (methods[0].method === 'totp') {
+    startTotpCountdown();
+  }
 }
-function updateCountdown() {
-  const el = document.getElementById('countdown');
+
+let mfaCountdownInterval = null;
+function startTotpCountdown() {
+  if (mfaCountdownInterval) clearInterval(mfaCountdownInterval);
+  updateTotpCountdown();
+  mfaCountdownInterval = setInterval(updateTotpCountdown, 1000);
+}
+function updateTotpCountdown() {
+  const el = document.getElementById('mfaCountdown');
   const remaining = 30 - (Math.floor(Date.now() / 1000) % 30);
   el.textContent = remaining.toString().padStart(2, '0');
   el.className = 'countdown' + (remaining <= 5 ? ' expired' : remaining <= 10 ? ' warning' : '');
 }
 
+async function handleMfaSendCode() {
+  const method = state.selectedMfaMethod;
+  if (!method) return toast('Selecciona un método', 'error');
+  const btn = document.getElementById('mfaSendCodeBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Enviando...';
+
+  let destination = state.email;
+  const body = { destination, type: method };
+
+  // Use temp_token during MFA verify (user not fully logged in yet)
+  const authToken = state.tempToken || state.token || false;
+
+  if (method === 'sms' || method === 'whatsapp') {
+    // During MFA verify, state.profile may not be loaded yet
+    if (state.profile && state.profile.phone) {
+      destination = state.profile.phone;
+    } else if (state.mfaTempUserId && authToken) {
+      // Try to get phone from the server using temp token
+      const { ok, data } = await api('GET', '/api/accounts/profile/', null, authToken);
+      if (ok && data.phone) {
+        destination = data.phone;
+        state.profile = data;
+      } else {
+        toast('No hay teléfono registrado. Ve a tu perfil y configura uno.', 'error');
+        btn.disabled = false; btn.textContent = 'Enviar Código';
+        return;
+      }
+    } else {
+      toast('No hay teléfono registrado. Ve a tu perfil y configura uno.', 'error');
+      btn.disabled = false; btn.textContent = 'Enviar Código';
+      return;
+    }
+    if (method === 'sms') {
+      const carrierSelect = document.getElementById('mfaCarrierSelect');
+      if (carrierSelect) body.carrierId = carrierSelect.value;
+    }
+  }
+  body.destination = destination;
+  body.type = method; // 'sms' or 'whatsapp' or 'email'
+
+  const { ok, data } = await api('POST', '/api/accounts/send-otp/', body, authToken);
+  btn.disabled = false; btn.textContent = 'Enviar Código';
+  if (ok) {
+    document.getElementById('mfaSentInfo').textContent = `Código enviado a ${destination}`;
+    if (data.code) toast(`${method === 'sms' ? '📱' : method === 'whatsapp' ? '💬' : '📧'} Código: ${data.code}`, 'info', 12000);
+    document.getElementById('mfaOtpInput').focus();
+  } else {
+    toast(data.error || 'Error al enviar código', 'error');
+  }
+}
+
 async function handleMfaVerify() {
-  const otp = document.getElementById('mfaOtp').value.trim();
-  if (!otp || otp.length < 6) return toast('Ingresa un código OTP válido de 6 dígitos', 'error');
+  const otp = document.getElementById('mfaOtpInput').value.trim();
+  const method = state.selectedMfaMethod;
+  if (!otp || otp.length < 6) return toast('Ingresa un código válido de 6 dígitos', 'error');
+  if (!method) return toast('Selecciona un método', 'error');
 
   const btn = document.getElementById('mfaVerifyBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Verificando...';
-  const { ok, data } = await api('POST', '/api/accounts/verify-mfa/', { user_id: state.userId, otp });
-  btn.disabled = false; btn.textContent = 'Verificar e Ingresar';
+  const { ok, data } = await api('POST', '/api/accounts/verify-mfa/', { user_id: state.mfaTempUserId, otp, method });
+  btn.disabled = false; btn.textContent = 'Verificar';
 
   if (ok && data.access) {
     state.token = data.access;
-    if (data.user) { state.mfaEnabled = data.user.mfa_enabled; state.email = data.user.email; state.userId = data.user.id; }
-    if (otpInterval) clearInterval(otpInterval);
+    if (data.user) { state.userId = data.user.id; state.email = data.user.email; state.name = data.user.name || ''; }
+    if (mfaCountdownInterval) clearInterval(mfaCountdownInterval);
+    await loadDashboard();
     toast('MFA verificado correctamente', 'success');
-    document.getElementById('mfaVerifyBtn').textContent = '✓ Verificado';
-    setTimeout(() => enterDashboard(data), 600);
   } else {
-    toast(data.error || 'Código OTP inválido', 'error');
-    document.getElementById('mfaOtp').value = '';
-    document.getElementById('mfaOtp').focus();
+    toast(data.error || 'Código inválido', 'error');
+    document.getElementById('mfaOtpInput').value = '';
+    document.getElementById('mfaOtpInput').focus();
   }
 }
 
-// ─── Dashboard ─────────────────────────────────────────────────
-function enterDashboard(data) {
-  document.getElementById('dashId').textContent = state.userId || '-';
-  document.getElementById('dashEmail').textContent = state.email;
-  document.getElementById('dashToken').textContent = (data.access || state.token).substring(0, 48) + '...';
-  const mfaEl = document.getElementById('dashMfa');
-  const setupBtn = document.getElementById('dashSetupBtn');
-  const successMsg = document.getElementById('dashSuccessMsg');
-  if (state.mfaEnabled) {
-    mfaEl.textContent = '✓ Habilitado'; mfaEl.className = 'badge badge-success';
-    setupBtn.textContent = '🔒 MFA Activo'; setupBtn.className = 'btn btn-success'; setupBtn.disabled = true;
-    successMsg.style.display = 'block';
-  } else {
-    mfaEl.textContent = '✗ Deshabilitado'; mfaEl.className = 'badge badge-danger';
-    setupBtn.textContent = '⚙️ Configurar MFA'; setupBtn.className = 'btn btn-primary'; setupBtn.disabled = false;
-    successMsg.style.display = 'none';
-  }
+// ─── Dashboard ─────────────────────────────────────────────
+async function loadDashboard() {
+  const { ok, data } = await api('GET', '/api/accounts/profile/', null, true);
+  if (!ok) { toast('Error al cargar perfil', 'error'); return; }
+  state.profile = data;
+  state.userId = data.id;
+  state.email = data.email;
+  state.name = data.name || data.email.split('@')[0];
+
+  document.getElementById('dashAvatar').textContent = (state.name.charAt(0) || 'U').toUpperCase();
+  document.getElementById('dashName').textContent = state.name;
+  document.getElementById('dashEmailDisplay').textContent = state.email;
+  document.getElementById('profName').textContent = data.name || '-';
+  document.getElementById('profEmail').textContent = data.email;
+  document.getElementById('profEmailVerified').textContent = data.email_verified ? '✓ Verificado' : '✗ No verificado';
+  document.getElementById('profEmailVerified').className = data.email_verified ? 'badge badge-success' : 'badge badge-warning';
+  document.getElementById('profPhone').textContent = data.phone || '(no configurado)';
+  document.getElementById('profPhoneVerified').textContent = data.phone_verified ? '✓ Verificado' : '✗ No verificado';
+  document.getElementById('profPhoneVerified').className = data.phone_verified ? 'badge badge-success' : 'badge badge-warning';
+  document.getElementById('profCreated').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('es-CL') : '-';
+
+  const mfaEnabled = data.mfa_totp_enabled || data.mfa_sms_enabled || data.mfa_email_enabled || data.mfa_whatsapp_enabled;
+  const badge = document.getElementById('dashMfaBadge');
+  if (mfaEnabled) { badge.textContent = '✓ MFA Activo'; badge.className = 'badge badge-success'; }
+  else { badge.textContent = '⚠ MFA Inactivo'; badge.className = 'badge badge-warning'; }
+
+  const adminBtn = document.getElementById('dashAdminBtn');
+  if (data.role === 'admin') { adminBtn.hidden = false; }
+  else { adminBtn.hidden = true; }
+
+  renderMfaMethods(data);
   showView('dashboard');
 }
 
+function renderMfaMethods(user) {
+  const list = document.getElementById('mfaMethodsList');
+  const methods = [
+    { key: 'totp', enabled: user.mfa_totp_enabled, icon: '🔐', name: 'App Autenticadora (TOTP)', desc: 'Google Authenticator, Authy, etc.' },
+    { key: 'sms', enabled: user.mfa_sms_enabled, icon: '📱', name: 'Código por SMS', desc: user.phone_verified ? `Teléfono: ${user.phone}` : 'Requiere verificar teléfono' },
+    { key: 'whatsapp', enabled: user.mfa_whatsapp_enabled, icon: '💬', name: 'Código por WhatsApp', desc: user.phone_verified ? `WhatsApp: ${user.phone}` : 'Requiere verificar teléfono' },
+    { key: 'email', enabled: user.mfa_email_enabled, icon: '📧', name: 'Código por Email', desc: user.email_verified ? `Email: ${user.email}` : 'Requiere verificar email' },
+  ];
+
+  list.innerHTML = '';
+  methods.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'mfa-method';
+    const isMobile = user.phone_verified && (m.key === 'sms' || m.key === 'whatsapp');
+    const isEmailOk = user.email_verified && m.key === 'email';
+    const canEnable = m.key === 'totp' || ((m.key === 'sms' || m.key === 'whatsapp') && user.phone_verified) || (m.key === 'email' && user.email_verified);
+    div.innerHTML = `
+      <div class="left">
+        <div class="icon">${m.icon}</div>
+        <div class="info">
+          <div class="name">${m.name}</div>
+          <div class="desc">${m.desc}</div>
+        </div>
+      </div>
+      <div>
+        ${m.enabled ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>'}
+      </div>
+    `;
+    div.style.cursor = 'pointer';
+    div.onclick = () => showMfaDetail(m.key, user);
+    list.appendChild(div);
+  });
+}
+
+function showMfaDetail(method, user) {
+  const modal = document.getElementById('modalMfaDetail');
+  const title = document.getElementById('mfaDetailTitle');
+  const body = document.getElementById('mfaDetailBody');
+
+  const configs = {
+    totp: { icon: '🔐', name: 'App Autenticadora (TOTP)' },
+    sms: { icon: '📱', name: 'Código por SMS' },
+    whatsapp: { icon: '💬', name: 'Código por WhatsApp' },
+    email: { icon: '📧', name: 'Código por Email' },
+  };
+  const cfg = configs[method];
+  title.textContent = `${cfg.icon} ${cfg.name}`;
+
+  const isEnabled = method === 'totp' ? user.mfa_totp_enabled : method === 'sms' ? user.mfa_sms_enabled : method === 'whatsapp' ? user.mfa_whatsapp_enabled : user.mfa_email_enabled;
+
+  let html = '';
+  if (method === 'totp') {
+    html = `
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+        Usa Google Authenticator, Authy o Microsoft Authenticator para generar códigos TOTP.
+      </p>
+      ${isEnabled ? `
+        <div style="text-align:center;padding:20px;">
+          <div style="font-size:48px;margin-bottom:12px;">✅</div>
+          <p style="color:var(--success);font-weight:600;">TOTP está activo</p>
+          <button class="btn btn-danger btn-block btn-sm" style="margin-top:16px;" onclick="handleTotpDisable()">Desactivar TOTP</button>
+        </div>
+      ` : `
+        <button class="btn btn-primary btn-block" onclick="closeModal('modalMfaDetail'); initTotpSetup();">Configurar TOTP</button>
+      `}
+    `;
+  } else if (method === 'sms') {
+    if (!user.phone_verified) {
+      html = `
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+          Primero verifica un número de teléfono en tu perfil.
+        </p>
+        <button class="btn btn-primary btn-block" onclick="closeModal('modalMfaDetail'); showEditProfile();">Ir a Editar Perfil</button>
+      `;
+    } else {
+      html = `
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+          Recibirás un código SMS en ${user.phone} para iniciar sesión.
+        </p>
+        ${isEnabled ? `
+          <div style="text-align:center;padding:20px;">
+            <div style="font-size:48px;margin-bottom:12px;">✅</div>
+            <p style="color:var(--success);font-weight:600;">SMS MFA está activo</p>
+            <button class="btn btn-danger btn-block btn-sm" style="margin-top:16px;" onclick="handleMfaToggle('sms', false)">Desactivar SMS MFA</button>
+          </div>
+        ` : `
+          <button class="btn btn-success btn-block" onclick="handleMfaToggle('sms', true)">Activar SMS MFA</button>
+        `}
+      `;
+    }
+  } else if (method === 'whatsapp') {
+    if (!user.phone_verified) {
+      html = `
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+          Primero verifica un número de teléfono en tu perfil.
+        </p>
+        <button class="btn btn-primary btn-block" onclick="closeModal('modalMfaDetail'); showEditProfile();">Ir a Editar Perfil</button>
+      `;
+    } else {
+      html = `
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+          Recibirás un código por WhatsApp en ${user.phone} para iniciar sesión.
+          ${isEnabled ? 'Necesitas tener Twilio WhatsApp configurado (admin).' : ''}
+        </p>
+        ${isEnabled ? `
+          <div style="text-align:center;padding:20px;">
+            <div style="font-size:48px;margin-bottom:12px;">✅</div>
+            <p style="color:var(--success);font-weight:600;">WhatsApp MFA está activo</p>
+            <button class="btn btn-danger btn-block btn-sm" style="margin-top:16px;" onclick="handleMfaToggle('whatsapp', false)">Desactivar WhatsApp MFA</button>
+          </div>
+        ` : `
+          <button class="btn btn-success btn-block" onclick="handleMfaToggle('whatsapp', true)">Activar WhatsApp MFA</button>
+        `}
+      `;
+    }
+  } else if (method === 'email') {
+    if (!user.email_verified) {
+      html = `
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+          Primero verifica tu email en la sección de perfil.
+        </p>
+        <button class="btn btn-primary btn-block" onclick="closeModal('modalMfaDetail'); showEditProfile();">Ir a Editar Perfil</button>
+      `;
+    } else {
+      html = `
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+          Recibirás un código por email para iniciar sesión.
+        </p>
+        ${isEnabled ? `
+          <div style="text-align:center;padding:20px;">
+            <div style="font-size:48px;margin-bottom:12px;">✅</div>
+            <p style="color:var(--success);font-weight:600;">Email MFA está activo</p>
+            <button class="btn btn-danger btn-block btn-sm" style="margin-top:16px;" onclick="handleMfaToggle('email', false)">Desactivar Email MFA</button>
+          </div>
+        ` : `
+          <button class="btn btn-success btn-block" onclick="handleMfaToggle('email', true)">Activar Email MFA</button>
+        `}
+      `;
+    }
+  }
+
+  body.innerHTML = html;
+  showModal('modalMfaDetail');
+}
+
+async function handleMfaToggle(method, enabled) {
+  const { ok, data } = await api('POST', '/api/accounts/mfa/toggle/', { method, enabled }, true);
+  if (ok) {
+    toast(data.message || 'MFA actualizado', 'success');
+    state.profile = data.user;
+    closeModal('modalMfaDetail');
+    renderMfaMethods(data.user);
+  } else {
+    toast(data.error || 'Error al actualizar MFA', 'error');
+  }
+}
+
+// ─── TOTP Setup ────────────────────────────────────────────
+async function initTotpSetup() {
+  showModal('modalTotpSetup');
+  const btn = document.getElementById('totpSetupBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Cargando...';
+  const { ok, data } = await api('POST', '/api/accounts/setup-totp/', {}, true);
+  btn.disabled = false; btn.textContent = 'Verificar y Activar TOTP';
+
+  if (ok && data.secret) {
+    document.getElementById('totpSecretBox').textContent = data.secret;
+    document.getElementById('totpQrImage').src = data.qr_data_url || '';
+    document.getElementById('totpSetupOtp').value = '';
+    document.getElementById('totpSetupOtp').focus();
+    state._otpauthUrl = data.otpauth_url || '';
+  } else {
+    toast('Error al generar TOTP', 'error');
+    closeModal('modalTotpSetup');
+  }
+}
+
+async function handleTotpVerify() {
+  const otp = document.getElementById('totpSetupOtp').value.trim();
+  if (!otp || otp.length < 6) return toast('Ingresa un código válido de 6 dígitos', 'error');
+
+  const btn = document.getElementById('totpSetupBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Verificando...';
+  const { ok, data } = await api('POST', '/api/accounts/verify-totp-setup/', { otp }, true);
+  btn.disabled = false; btn.textContent = 'Verificar y Activar TOTP';
+
+  if (ok) {
+    toast('✅ TOTP configurado exitosamente', 'success');
+    closeModal('modalTotpSetup');
+    // Refresh MFA methods
+    const { ok: ok2, data: data2 } = await api('GET', '/api/accounts/profile/', null, true);
+    if (ok2) { state.profile = data2; renderMfaMethods(data2); }
+  } else {
+    toast(data.error || 'Código inválido', 'error');
+  }
+}
+
+async function handleTotpDisable() {
+  if (!confirm('¿Desactivar TOTP? Tu cuenta será menos segura.')) return;
+  await handleMfaToggle('totp', false);
+}
+
+// ─── SMS Carriers ───────────────────────────────────────────
+let smsCarriers = [];
+async function loadSmsCarriers(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  // Only reload if empty or forced
+  if (select.options.length > 1 && smsCarriers.length > 0) return;
+  const { ok, data } = await api('GET', '/api/sms/carriers/', null, state.token ? true : false);
+  if (!ok || !data.carriers) return;
+  smsCarriers = data.carriers;
+  select.innerHTML = '<option value="">Selecciona tu operador móvil (opcional)</option>';
+  data.carriers.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + (c.gateway ? ` (${c.gateway})` : '');
+    select.appendChild(opt);
+  });
+}
+
+// ─── Edit Profile ──────────────────────────────────────────
+function showEditProfile() {
+  const p = state.profile;
+  document.getElementById('editName').value = p.name || '';
+  document.getElementById('editEmail').value = p.email || '';
+  document.getElementById('editPhone').value = p.phone || '';
+  document.getElementById('editEmailOtpSection').style.display = 'none';
+  document.getElementById('editPhoneOtpSection').style.display = 'none';
+  document.getElementById('editEmailOtp').value = '';
+  document.getElementById('editPhoneOtp').value = '';
+  showModal('modalEditProfile');
+  loadSmsCarriers('editPhoneCarrier');
+}
+
+async function handleSaveProfile() {
+  const name = document.getElementById('editName').value.trim();
+  if (!name || name.length < 2) return toast('El nombre debe tener al menos 2 caracteres', 'error');
+
+  const { ok, data } = await api('PUT', '/api/accounts/profile/', { name }, true);
+  if (ok) {
+    toast('Perfil actualizado', 'success');
+    state.profile = data.user;
+    closeModal('modalEditProfile');
+    loadDashboard();
+  } else {
+    toast(data.error || 'Error al actualizar', 'error');
+  }
+}
+
+async function handleSendEmailOtp() {
+  const email = document.getElementById('editEmail').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Email inválido', 'error');
+
+  const btn = document.getElementById('editEmailVerifyBtn');
+  btn.disabled = true; btn.textContent = '...';
+  const { ok, data } = await api('POST', '/api/accounts/send-otp/', { destination: email, type: 'email' }, true);
+  btn.disabled = false; btn.textContent = 'Verificar';
+
+  if (ok) {
+    document.getElementById('editEmailOtpSection').style.display = 'block';
+    document.getElementById('editEmailOtp').focus();
+    if (data.code) toast(`📧 Código: ${data.code}`, 'info', 12000);
+  } else {
+    toast(data.error || 'Error al enviar código', 'error');
+  }
+}
+
+async function handleVerifyEmailOtp() {
+  const email = document.getElementById('editEmail').value.trim();
+  const code = document.getElementById('editEmailOtp').value.trim();
+  if (!code || code.length < 6) return toast('Código inválido', 'error');
+
+  const { ok, data } = await api('POST', '/api/accounts/verify-otp/', { destination: email, type: 'email', code }, true);
+  if (ok) {
+    toast('Email verificado correctamente', 'success');
+    document.getElementById('editEmailOtpSection').style.display = 'none';
+    state.profile = data.user;
+  } else {
+    toast(data.error || 'Código inválido', 'error');
+  }
+}
+
+async function handleSendSmsOtp() {
+  const phone = document.getElementById('editPhone').value.trim();
+  if (!/^\+?[\d\s\-()]{7,20}$/.test(phone)) return toast('Número inválido. Usa formato +573001234567', 'error');
+
+  const btn = document.getElementById('editPhoneVerifyBtn');
+  btn.disabled = true; btn.textContent = '...';
+
+  const carrierSelect = document.getElementById('editPhoneCarrier');
+  const body = { destination: phone, type: 'sms' };
+  if (carrierSelect && carrierSelect.value) body.carrierId = carrierSelect.value;
+
+  const { ok, data } = await api('POST', '/api/accounts/send-otp/', body, true);
+  btn.disabled = false; btn.textContent = 'Verificar';
+
+  if (ok) {
+    document.getElementById('editPhoneOtpSection').style.display = 'block';
+    document.getElementById('editPhoneOtp').focus();
+    if (data.code) toast(`📱 Código: ${data.code}`, 'info', 12000);
+  } else {
+    toast(data.error || 'Error al enviar código', 'error');
+  }
+}
+
+async function handleVerifyPhoneOtp() {
+  const phone = document.getElementById('editPhone').value.trim();
+  const code = document.getElementById('editPhoneOtp').value.trim();
+  if (!code || code.length < 6) return toast('Código inválido', 'error');
+
+  const { ok, data } = await api('POST', '/api/accounts/verify-otp/', { destination: phone, type: 'sms', code }, true);
+  if (ok) {
+    toast('Teléfono verificado correctamente', 'success');
+    document.getElementById('editPhoneOtpSection').style.display = 'none';
+    state.profile = data.user;
+  } else {
+    toast(data.error || 'Código inválido', 'error');
+  }
+}
+
+// ─── Change Password ───────────────────────────────────────
+function showChangePassword() {
+  document.getElementById('cpCurrent').value = '';
+  document.getElementById('cpNew').value = '';
+  document.getElementById('cpConfirm').value = '';
+  showModal('modalChangePassword');
+}
+
+async function handleChangePassword() {
+  const current = document.getElementById('cpCurrent').value;
+  const newPw = document.getElementById('cpNew').value;
+  const confirm = document.getElementById('cpConfirm').value;
+  if (!current || !newPw || !confirm) return toast('Todos los campos son obligatorios', 'error');
+  if (newPw !== confirm) return toast('Las contraseñas no coinciden', 'error');
+  if (newPw.length < 6) return toast('Mínimo 6 caracteres', 'error');
+
+  const btn = document.getElementById('cpBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Cambiando...';
+  const { ok, data } = await api('PUT', '/api/accounts/change-password/', { currentPassword: current, newPassword: newPw }, true);
+  btn.disabled = false; btn.textContent = 'Cambiar Contraseña';
+
+  if (ok) { toast('Contraseña actualizada', 'success'); closeModal('modalChangePassword'); }
+  else toast(data.error || 'Error', 'error');
+}
+
+// ─── Forgot Password ───────────────────────────────────────
+async function handleForgotPassword() {
+  const email = document.getElementById('fpEmail').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Email inválido', 'error');
+
+  const btn = document.getElementById('fpBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Enviando...';
+  const { ok, data } = await api('POST', '/api/accounts/forgot-password/', { email });
+  btn.disabled = false; btn.textContent = 'Enviar Enlace';
+
+  if (ok) {
+    toast(data.message || 'Revisa tu email (o la consola del servidor)', 'success');
+    // Show dev token if available
+    try {
+      const dev = await api('GET', '/api/dev/otp');
+      if (dev.ok && dev.data.otps) {
+        for (const [k, v] of Object.entries(dev.data.otps)) {
+          if (k.startsWith('reset:')) {
+            const match = v.code;
+            toast(`🔑 Token de desarrollo: ${match.substring(0, 30)}...`, 'warning', 12000);
+            // Auto-fill token field and show reset view
+            document.getElementById('rpToken').value = match;
+            setTimeout(() => showView('resetPassword'), 800);
+            break;
+          }
+        }
+      }
+    } catch(e) {}
+    if (currentView !== 'resetPassword') {
+      setTimeout(() => showView('login'), 2000);
+    }
+  } else {
+    toast(data.error || 'Error al enviar', 'error');
+  }
+}
+
+// ─── Reset Password ────────────────────────────────────────
+async function handleResetPassword() {
+  const token = document.getElementById('rpToken').value.trim();
+  const password = document.getElementById('rpPassword').value;
+  const confirm = document.getElementById('rpConfirm').value;
+
+  if (!token) return toast('Ingresa el token de recuperación', 'error');
+  if (!password || !confirm) return toast('Todos los campos son obligatorios', 'error');
+  if (password !== confirm) return toast('Las contraseñas no coinciden', 'error');
+  if (password.length < 6) return toast('Mínimo 6 caracteres', 'error');
+
+  const btn = document.getElementById('rpBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Restableciendo...';
+  const { ok, data } = await api('POST', '/api/accounts/reset-password/', { token, newPassword: password });
+  btn.disabled = false; btn.textContent = 'Restablecer Contraseña';
+
+  if (ok) {
+    toast('✅ Contraseña restablecida. Ya puedes iniciar sesión.', 'success');
+    document.getElementById('fpEmail').value = '';
+    document.getElementById('rpToken').value = '';
+    document.getElementById('rpPassword').value = '';
+    document.getElementById('rpConfirm').value = '';
+    setTimeout(() => showView('login'), 1200);
+  } else {
+    toast(data.error || 'Error al restablecer', 'error');
+  }
+}
+
+// ─── Logout ─────────────────────────────────────────────────
 function handleLogout() {
-  state.token = ''; state.userId = null; state.email = ''; state.tempToken = '';
+  state.token = ''; state.userId = null; state.email = ''; state.tempToken = ''; state.profile = null;
   document.getElementById('loginPassword').value = '';
-  if (otpInterval) clearInterval(otpInterval);
+  if (mfaCountdownInterval) clearInterval(mfaCountdownInterval);
   showView('login');
   toast('Sesión cerrada', 'info');
 }
 
-// ─── MFA Setup ─────────────────────────────────────────────────
-async function initMfaSetup() {
-  const btn = document.getElementById('setupBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Cargando...';
-  const { ok, data } = await api('POST', '/api/accounts/setup-mfa/', {}, true);
-  btn.disabled = false; btn.textContent = 'Verificar y Activar MFA';
+// ─── Refresh Profile ───────────────────────────────────────
+async function refreshProfile() {
+  const { ok, data } = await api('GET', '/api/accounts/profile/', null, true);
+  if (ok) { state.profile = data; renderMfaMethods(data); toast('Perfil recargado', 'success'); }
+  else toast('Error al recargar', 'error');
+}
 
-  if (ok && data.secret) {
-    document.getElementById('secretBox').textContent = data.secret;
-    const qrImg = document.getElementById('qrImage');
-    qrImg.src = data.qr_data_url || '';
-    qrImg.style.display = data.qr_data_url ? 'block' : 'none';
-    if (data.qr_data_url) {
-      // Wait for image to load then show success
-      qrImg.onload = () => toast('Código QR generado correctamente', 'success');
-    }
-    state._otpauthUrl = data.otpauth_url || '';
-    document.getElementById('setupOtp').value = '';
-    document.getElementById('setupOtp').focus();
+// ─── Admin Panel ────────────────────────────────────────────
+async function showAdminPanel() {
+  showView('admin');
+  await refreshAdminPanel();
+}
+
+async function refreshAdminPanel() {
+  const { ok, data } = await api('GET', '/api/admin/users/', null, true);
+  if (!ok) { toast('Error al cargar panel de administración', 'error'); showView('dashboard'); return; }
+
+  const stats = data.stats || {};
+  const statsEl = document.getElementById('adminStats');
+  statsEl.innerHTML = `
+    <div class="info-row"><span class="label">Total</span><span class="value">${stats.total || 0}</span></div>
+    <div class="info-row"><span class="label">Bloqueados</span><span class="value">${stats.locked || 0}</span></div>
+    <div class="info-row"><span class="label">MFA Activo</span><span class="value">${stats.mfa_enabled || 0}</span></div>
+    <div class="info-row"><span class="label">Admins</span><span class="value">${stats.admins || 0}</span></div>
+  `;
+
+  state._adminUsers = data.users || [];
+  renderAdminUsers();
+}
+
+function renderAdminUsers() {
+  const query = (document.getElementById('adminSearch').value || '').toLowerCase();
+  const list = document.getElementById('adminUsersList');
+  let users = state._adminUsers || [];
+  if (query) users = users.filter(u => (u.email||'').toLowerCase().includes(query) || (u.name||'').toLowerCase().includes(query));
+
+  if (users.length === 0) {
+    list.innerHTML = '<div class="empty-state">No se encontraron usuarios</div>';
+    return;
+  }
+
+  list.innerHTML = users.map(u => {
+    const mfaOn = u.mfa_totp_enabled || u.mfa_sms_enabled || u.mfa_email_enabled;
+    const isCurrent = u.id === state.userId;
+    return `
+      <div class="mfa-method" style="flex-direction:column;align-items:stretch;gap:8px;${isCurrent ? 'border-color:var(--primary);' : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:500;font-size:13px;">${u.name || '—'} ${u.role === 'admin' ? '<span class="badge badge-info">Admin</span>' : ''} ${isCurrent ? '<span class="badge badge-warning">Tú</span>' : ''}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${u.email}</div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+            <span class="badge ${u.is_locked ? 'badge-danger' : 'badge-success'}">${u.is_locked ? 'Bloqueado' : 'Activo'}</span>
+            <span class="badge ${mfaOn ? 'badge-success' : 'badge-warning'}" style="font-size:10px;">${mfaOn ? 'MFA' : 'No MFA'}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-sm ${u.is_locked ? 'btn-success' : 'btn-outline'}" onclick="adminToggleLock(${u.id})" style="font-size:11px;padding:4px 8px;">${u.is_locked ? '🔓' : '🔒'}</button>
+          <button class="btn btn-outline btn-sm" onclick="adminResetMfa(${u.id})" style="font-size:11px;padding:4px 8px;">🔄 MFA</button>
+          ${!isCurrent ? `
+            <button class="btn btn-outline btn-sm" onclick="adminToggleRole(${u.id}, '${u.role === 'admin' ? 'user' : 'admin'}')" style="font-size:11px;padding:4px 8px;${u.role === 'admin' ? 'border-color:var(--danger);color:var(--danger);' : 'border-color:var(--info);color:var(--info);'}">${u.role === 'admin' ? '👑 Quitar Admin' : '👑 Hacer Admin'}</button>
+            <button class="btn btn-outline btn-sm" onclick="adminEditUser(${u.id})" style="font-size:11px;padding:4px 8px;">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="adminDeleteUser(${u.id})" style="font-size:11px;padding:4px 8px;">🗑️</button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function adminToggleLock(userId) {
+  const { ok, data } = await api('POST', `/api/admin/users/${userId}/toggle-lock/`, {}, true);
+  if (ok) { toast(data.message || 'Estado cambiado', 'success'); refreshAdminPanel(); }
+  else toast(data.error || 'Error', 'error');
+}
+
+async function adminResetMfa(userId) {
+  if (!confirm('¿Resetear MFA de este usuario? Deberá configurarlo nuevamente al iniciar sesión.')) return;
+  const { ok, data } = await api('POST', `/api/admin/users/${userId}/reset-mfa/`, {}, true);
+  if (ok) { toast(data.message || 'MFA reseteado', 'success'); refreshAdminPanel(); }
+  else toast(data.error || 'Error', 'error');
+}
+
+async function adminDeleteUser(userId) {
+  if (!confirm('¿Eliminar este usuario permanentemente? Esta acción no se puede deshacer.')) return;
+  const { ok, data } = await api('DELETE', `/api/admin/users/${userId}/`, {}, true);
+  if (ok) { toast(data.message || 'Usuario eliminado', 'success'); refreshAdminPanel(); }
+  else toast(data.error || 'Error', 'error');
+}
+
+function adminEditUser(userId) {
+  const user = (state._adminUsers || []).find(u => u.id === userId);
+  if (!user) return;
+  const newName = prompt(`Nombre para ${user.email}:`, user.name || '');
+  if (newName === null) return;
+  if (newName.trim().length < 2) return toast('Nombre muy corto', 'error');
+  api('PUT', `/api/admin/users/${userId}/`, { name: newName.trim() }, true).then(({ ok, data }) => {
+    if (ok) { toast('Usuario actualizado', 'success'); refreshAdminPanel(); }
+    else toast(data.error || 'Error', 'error');
+  });
+}
+
+async function adminToggleRole(userId, newRole) {
+  if (userId === state.userId) return toast('No puedes cambiar tu propio rol', 'error');
+  const action = newRole === 'admin' ? 'promover a administrador' : 'quitar permisos de administrador';
+  if (!confirm(`¿${action} a este usuario?`)) return;
+  const { ok, data } = await api('PUT', `/api/admin/users/${userId}/`, { role: newRole }, true);
+  if (ok) { toast(data.message || 'Rol actualizado', 'success'); refreshAdminPanel(); }
+  else toast(data.error || 'Error', 'error');
+}
+
+// ─── Email Config ────────────────────────────────────────────
+let emailCfgLoaded = false;
+async function toggleEmailConfig() {
+  const section = document.getElementById('emailConfigSection');
+  if (section.style.display === 'block') { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  if (!emailCfgLoaded) await loadEmailConfig();
+}
+
+async function loadEmailConfig() {
+  const { ok, data } = await api('GET', '/api/admin/email-config/', null, true);
+  if (!ok) return;
+  emailCfgLoaded = true;
+  document.getElementById('smtpHost').value = data.host || 'smtp.gmail.com';
+  document.getElementById('smtpPort').value = data.port || 587;
+  document.getElementById('smtpUser').value = data.user || '';
+  document.getElementById('smtpFrom').value = data.from || '';
+  const indicator = document.getElementById('emailCfgIndicator');
+  if (data.user && data.pass && data.pass !== '') {
+    indicator.textContent = '✓ Configurado';
+    indicator.style.color = 'var(--success)';
   } else {
-    toast('Error al cargar configuración MFA', 'error');
+    indicator.textContent = '⚠ No configurado';
+    indicator.style.color = 'var(--warning)';
   }
 }
 
-function copySecret() {
-  const secret = document.getElementById('secretBox').textContent;
-  navigator.clipboard.writeText(secret).then(() => toast('Clave secreta copiada', 'success')).catch(() => toast('No se pudo copiar', 'error'));
-}
+async function saveEmailConfig() {
+  const body = {
+    host: document.getElementById('smtpHost').value.trim() || 'smtp.gmail.com',
+    port: parseInt(document.getElementById('smtpPort').value) || 587,
+    user: document.getElementById('smtpUser').value.trim(),
+    pass: document.getElementById('smtpPass').value,
+    from: document.getElementById('smtpFrom').value.trim(),
+  };
+  if (!body.user) return toast('Ingresa el usuario SMTP', 'error');
+  if (!body.pass) return toast('Ingresa la contraseña SMTP', 'error');
 
-function copyOtpauthUrl() {
-  if (state._otpauthUrl) {
-    navigator.clipboard.writeText(state._otpauthUrl).then(() => toast('URL OTPAuth copiada', 'success')).catch(() => toast('No se pudo copiar', 'error'));
-  } else {
-    toast('No hay URL disponible', 'error');
-  }
-}
+  const resultEl = document.getElementById('smtpTestResult');
+  resultEl.innerHTML = '<span class="spinner"></span> Conectando...';
 
-async function handleSetupMfa() {
-  const otp = document.getElementById('setupOtp').value.trim();
-  if (!otp || otp.length < 6) return toast('Ingresa un código OTP válido de 6 dígitos', 'error');
-
-  const btn = document.getElementById('setupBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Verificando...';
-  const { ok, data } = await api('POST', '/api/accounts/verify-setup/', { otp }, true);
-  btn.disabled = false; btn.textContent = 'Verificar y Activar MFA';
-
+  const { ok, data } = await api('PUT', '/api/admin/email-config/', body, true);
   if (ok) {
-    state.mfaEnabled = true;
-    if (data.user) { state.userId = data.user.id; state.email = data.user.email; }
-    toast('✅ MFA configurado exitosamente', 'success');
-    setTimeout(() => {
-      document.getElementById('dashId').textContent = state.userId || '-';
-      document.getElementById('dashEmail').textContent = state.email;
-      document.getElementById('dashToken').textContent = state.token.substring(0, 48) + '...';
-      const mfaEl = document.getElementById('dashMfa');
-      mfaEl.textContent = '✓ Habilitado';
-      mfaEl.className = 'badge badge-success';
-      showView('dashboard');
-    }, 1000);
+    resultEl.textContent = data.test_ok ? '✓ Correo configurado y probado' : '⚠ Guardado, pero no se pudo conectar al servidor SMTP. Revisa los datos.';
+    resultEl.style.color = data.test_ok ? 'var(--success)' : 'var(--warning)';
+    document.getElementById('smtpPass').value = '';
+    if (data.test_ok) toast('📧 Correo SMTP configurado correctamente', 'success');
+    loadEmailConfig();
   } else {
-    toast(data.error || 'Error al verificar MFA', 'error');
+    resultEl.textContent = '✗ ' + (data.error || 'Error');
+    resultEl.style.color = 'var(--danger)';
   }
 }
 
-// ─── Init on page load ────────────────────────────────────────
+// ─── Twilio Config ────────────────────────────────────────────
+let twilioCfgLoaded = false;
+async function toggleTwilioConfig() {
+  const section = document.getElementById('twilioConfigSection');
+  if (section.style.display === 'block') { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  if (!twilioCfgLoaded) await loadTwilioConfig();
+}
+
+async function loadTwilioConfig() {
+  const { ok, data } = await api('GET', '/api/admin/twilio-config/', null, true);
+  if (!ok) return;
+  twilioCfgLoaded = true;
+  document.getElementById('twilioAccountSid').value = data.accountSid || '';
+  document.getElementById('twilioAuthToken').value = '';
+  document.getElementById('twilioFromNumber').value = data.fromNumber || '';
+  document.getElementById('twilioWhatsappFrom').value = data.whatsappFrom || '';
+  const indicator = document.getElementById('twilioCfgIndicator');
+  if (data.accountSid && data.authToken && data.authToken !== '') {
+    indicator.textContent = '✓ Configurado';
+    indicator.style.color = 'var(--success)';
+  } else {
+    indicator.textContent = '⚠ No configurado';
+    indicator.style.color = 'var(--warning)';
+  }
+}
+
+async function saveTwilioConfig() {
+  const body = {
+    accountSid: document.getElementById('twilioAccountSid').value.trim(),
+    authToken: document.getElementById('twilioAuthToken').value,
+    fromNumber: document.getElementById('twilioFromNumber').value.trim(),
+    whatsappFrom: document.getElementById('twilioWhatsappFrom').value.trim(),
+  };
+  if (!body.accountSid) return toast('Ingresa el Account SID de Twilio', 'error');
+  if (!body.authToken) return toast('Ingresa el Auth Token de Twilio', 'error');
+
+  const resultEl = document.getElementById('twilioTestResult');
+  resultEl.innerHTML = '<span class="spinner"></span> Conectando...';
+
+  const { ok, data } = await api('PUT', '/api/admin/twilio-config/', body, true);
+  if (ok) {
+    resultEl.textContent = data.test_ok ? '✓ Twilio configurado y conectado' : '⚠ Guardado, pero no se pudo conectar con Twilio. Revisa las credenciales.';
+    resultEl.style.color = data.test_ok ? 'var(--success)' : 'var(--warning)';
+    document.getElementById('twilioAuthToken').value = '';
+    if (data.test_ok) toast('💬 Twilio configurado correctamente', 'success');
+    loadTwilioConfig();
+  } else {
+    resultEl.textContent = '✗ ' + (data.error || 'Error');
+    resultEl.style.color = 'var(--danger)';
+  }
+}
+
+let cmbCfgLoaded = false;
+
+async function toggleCallMeBotConfig() {
+  const section = document.getElementById('callmebotConfigSection');
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+  if (!cmbCfgLoaded) await loadCallMeBotConfig();
+}
+
+async function loadCallMeBotConfig() {
+  const { ok, data } = await api('GET', '/api/admin/callmebot-config/', null, true);
+  if (!ok) return;
+  cmbCfgLoaded = true;
+  document.getElementById('cmbApikey').value = '';
+  const indicator = document.getElementById('cmbCfgIndicator');
+  if (data.apikey && data.apikey !== '') {
+    indicator.textContent = '✓ Configurado';
+    indicator.style.color = 'var(--success)';
+  } else {
+    indicator.textContent = '⚠ No configurado';
+    indicator.style.color = 'var(--warning)';
+  }
+}
+
+async function saveCallMeBotConfig() {
+  const body = { apikey: document.getElementById('cmbApikey').value.trim() };
+  if (!body.apikey) return toast('Ingresa la API Key de CallMeBot', 'error');
+  const resultEl = document.getElementById('cmbTestResult');
+  resultEl.innerHTML = '<span class="spinner"></span> Guardando...';
+  const { ok, data } = await api('PUT', '/api/admin/callmebot-config/', body, true);
+  if (ok) {
+    resultEl.textContent = '✓ Configuración guardada';
+    resultEl.style.color = 'var(--success)';
+    document.getElementById('cmbApikey').value = '';
+    toast('🤖 CallMeBot configurado correctamente', 'success');
+    loadCallMeBotConfig();
+  } else {
+    resultEl.textContent = '✗ ' + (data.error || 'Error');
+    resultEl.style.color = 'var(--danger)';
+  }
+}
+
+// ─── Init ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loginEmail').focus();
 });

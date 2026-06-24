@@ -4,6 +4,10 @@
   "private": true,
   "description": "MFA Authentication System",
   "dependencies": {
-    "qrcode": "^1.5.4"
+    "better-sqlite3": "^12.11.1",
+    "nodemailer": "^9.0.1",
+    "qrcode": "^1.5.4",
+    "sql.js": "^1.14.1",
+    "twilio": "^6.0.2"
   }
 }
