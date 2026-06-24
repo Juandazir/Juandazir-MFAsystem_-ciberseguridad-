@@ -1,0 +1,2303 @@
+\documentclass[12pt,a4paper,openany]{article}
+
+% ─── Packages ──────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc, decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\usepackage{tcolorbox}
+\tcbuselibrary{listings,skins,breakable}
+\usepackage{caption}
+\usepackage{float}
+
+% ─── Colors ────────────────────────────────────────────────
+\definecolor{primary}{HTML}{6366f1}
+\definecolor{darkbg}{HTML}{0f172a}
+\definecolor{cardbg}{HTML}{1e293b}
+\definecolor{accent}{HTML}{a5b4fc}
+\definecolor{success}{HTML}{22c55e}
+\definecolor{warning}{HTML}{f59e0b}
+\definecolor{danger}{HTML}{ef4444}
+\definecolor{codebg}{HTML}{1e293b}
+\definecolor{codefg}{HTML}{e2e8f0}
+\definecolor{keywordcolor}{HTML}{c084fc}
+\definecolor{stringcolor}{HTML}{86efac}
+\definecolor{commentcolor}{HTML}{64748b}
+
+% ─── Code style ────────────────────────────────────────────
+\lstdefinestyle{jsstyle}{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small\color{codefg},
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor}\itshape,
+    numbers=left,
+    numberstyle=\tiny\color{commentcolor},
+    numbersep=8pt,
+    frame=single,
+    rulecolor=\color{accent},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=2,
+    language=Java,
+    morekeywords={const, function, async, await, return, if, else, for, new, require, class, try, catch, export, default, process}
+}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small\color{codefg},
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor}\itshape,
+    numbers=left,
+    numberstyle=\tiny\color{commentcolor},
+    numbersep=8pt,
+    frame=single,
+    rulecolor=\color{accent},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=4,
+    language=Python,
+    morekeywords={self, True, False, None, as, with, class, def, from, import}
+}
+
+\lstdefinestyle{sqlstyle}{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small\color{codefg},
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor}\itshape,
+    numbers=left,
+    numberstyle=\tiny\color{commentcolor},
+    numbersep=8pt,
+    frame=single,
+    rulecolor=\color{accent},
+    breaklines=true,
+    language=SQL,
+    morekeywords={CREATE, TABLE, IF, NOT, EXISTS, INTEGER, PRIMARY, KEY, AUTOINCREMENT, TEXT, UNIQUE, DEFAULT, INSERT, INTO, VALUES, SELECT, FROM, WHERE, UPDATE, SET, DELETE, ALTER, COLUMN, ADD, ON, CASE, WHEN, THEN, SUM, AS, ORDER, BY, COUNT, PRAGMA, FOREIGN, KEYS, WAL, ENGINE, INNODB}
+}
+
+% ─── Headers ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{primary}{\small Sistema MFA -- Documento Técnico}}
+\fancyhead[R]{\textcolor{primary}{\small v3.0}}
+\fancyfoot[C]{\textcolor{primary}{\thepage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% ─── Title formatting ─────────────────────────────────────
+\titleformat{\section}
+  {\Large\bfseries\color{primary}}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{primary!80!black}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{primary!70!black}}{\thesubsubsection}{1em}{}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    urlcolor=accent,
+    citecolor=primary
+}
+
+% ─── tcolorbox styles ─────────────────────────────────────
+\newtcolorbox{infobox}[1][]{
+    colback=primary!5!white,
+    colframe=primary,
+    fonttitle=\bfseries,
+    title=#1,
+    breakable
+}
+
+\newtcolorbox{warnbox}[1][]{
+    colback=warning!5!white,
+    colframe=warning,
+    fonttitle=\bfseries,
+    title=#1,
+    breakable
+}
+
+\newtcolorbox{dangerbox}[1][]{
+    colback=danger!5!white,
+    colframe=danger,
+    fonttitle=\bfseries,
+    title=#1,
+    breakable
+}
+
+% ══════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Portada ──────────────────────────────────────────────
+\begin{titlepage}
+\begin{center}
+\vspace*{2cm}
+
+\begin{tikzpicture}
+    \node[rounded corners=20pt, fill=darkbg, minimum width=14cm, minimum height=18cm, inner sep=1.5cm] (box) {};
+    
+    \node[anchor=north, text=white, font=\Huge\bfseries] at (box.north) [yshift=-1.5cm] {SISTEMA DE};
+    \node[anchor=north, text=accent, font=\Huge\bfseries] at (box.north) [yshift=-3cm] {AUTENTICACIÓN};
+    \node[anchor=north, text=accent, font=\Huge\bfseries] at (box.north) [yshift=-4.5cm] {MULTIFACTOR};
+    
+    \node[anchor=north, text=white, font=\Large] at (box.north) [yshift=-6.5cm] {--- MFA Authentication System ---};
+    
+    \draw[primary, line width=1pt] (-5.5,-7.2) -- (5.5,-7.2);
+    
+    \node[anchor=north, text=accent!80!white, font=\large] at (box.north) [yshift=-8.5cm] {Documento Técnico Completo};
+    \node[anchor=north, text=accent!80!white, font=\normalsize] at (box.north) [yshift=-9.5cm] {Arquitectura, APIs, Seguridad y Casos de Uso};
+    
+    \node[anchor=north, text=white, font=\normalsize] at (box.north) [yshift=-12cm] {Carrera de Ciberseguridad};
+    \node[anchor=north, text=accent!60!white, font=\small] at (box.north) [yshift=-13cm] {Versión 3.0 -- Junio 2026};
+    
+    \node[anchor=north, text=accent, font=\small] at (box.north) [yshift=-15.5cm] {Node.js $\cdot$ SQLite $\cdot$ Django $\cdot$ PostgreSQL};
+    \node[anchor=north, text=accent!60!white, font=\small\itshape] at (box.north) [yshift=-16.5cm] {JWT $\cdot$ TOTP $\cdot$ OTP $\cdot$ scrypt $\cdot$ HMAC-SHA256};
+    
+\end{tikzpicture}
+
+\vfill
+\end{center}
+\end{titlepage}
+
+% ─── Índice ───────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 1: INTRODUCCIÓN
+% ══════════════════════════════════════════════════════════
+\section{Introducción y Contexto}
+
+\subsection{Motivación del Proyecto}
+
+En el landscape actual de ciberseguridad, la autenticación basada únicamente en contraseñas ha demostrado ser insuficiente para proteger cuentas de usuarios. Según estudios recientes, el compromiso de credenciales es la causa principal de brechas de seguridad. Este proyecto implementa un sistema completo de \textbf{Autenticación Multifactor (MFA)} que combina múltiples factores de verificación para garantizar un nivel superior de seguridad.
+
+\subsection{Objetivos del Sistema}
+
+\begin{itemize}[leftmargin=*, itemsep=3pt]
+    \item Implementar autenticación de múltiples factores (MFA) con tres métodos: TOTP, WhatsApp y Email
+    \item Proporcionar registro, inicio de sesión, recuperación de contraseña y gestión de perfil
+    \item Implementar panel de administración para gestión de usuarios
+    \item Aplicar principios de seguridad: rate limiting, account lockout, headers HTTP seguros
+    \item Construir un sistema desplegable mediante contenedores Docker
+\end{itemize}
+
+\subsection{Alcance del Documento}
+
+Este documento proporciona un análisis técnico exhaustivo del sistema MFA, cubriendo la arquitectura completa, cada endpoint de la API, los algoritmos criptográficos utilizados, los mecanismos de seguridad, y todos los casos de uso que la aplicación soporta.
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 2: ARQUITECTURA DEL SISTEMA
+% ══════════════════════════════════════════════════════════
+\section{Arquitectura del Sistema}
+
+\subsection{Vista de Alto Nivel}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.8cm,
+    box/.style={rectangle, rounded corners=8pt, minimum width=3cm, minimum height=1.2cm, text centered, font=\small\bfseries, draw=primary, line width=1pt},
+    server/.style={rectangle, rounded corners=8pt, minimum width=3.5cm, minimum height=1.5cm, text centered, font=\small\bfseries, draw=warning, fill=warning!10, line width=1pt},
+    db/.style={cylinder, shape border rotate=90, aspect=0.25, minimum width=3cm, minimum height=1.2cm, text centered, font=\small\bfseries, draw=success, fill=success!10, line width=1pt},
+    api/.style={rectangle, rounded corners=8pt, minimum width=3cm, minimum height=1.2cm, text centered, font=\small\bfseries, draw=danger, fill=danger!10, line width=1pt},
+    arrow/.style={-{Stealth[length=3mm]}, thick, primary}
+]
+
+% Frontend
+\node[box, fill=primary!10] (fe) {Frontend SPA\\{\scriptsize HTML/CSS/JS}};
+
+% Backend Node
+\node[server, right=2.5cm of fe] (node) {Backend Node.js\\{\scriptsize server.js}};
+
+% APIs
+\node[api, above right=1cm and 1.5cm of fe] (smtp) {SMTP\\{\scriptsize Nodemailer}};
+\node[api, below right=1cm and 1.5cm of fe] (wa) {TextMeBot\\{\scriptsize WhatsApp API}};
+
+% DB
+\node[db, right=2.5cm of node] (sqlite) {SQLite\\{\scriptsize better-sqlite3}};
+
+% Docker
+\node[box, draw=accent, fill=accent!10, below=2cm of node] (docker) {Docker Compose\\{\scriptsize Orquestación}};
+
+% Backend Django
+\node[server, right=4cm of wa] (django) {Backend Django\\{\scriptsize (alternativo)}};
+\node[db, right=2.5cm of django] (pg) {PostgreSQL\\{\scriptsize Docker}};
+
+% Arrows
+\draw[arrow] (fe) -- (node);
+\draw[arrow] (node) -- (sqlite);
+\draw[arrow] (node) -- (smtp);
+\draw[arrow] (node) -- (wa);
+\draw[arrow] (django) -- (pg);
+
+\end{tikzpicture}
+\caption{Arquitectura de alto nivel del sistema MFA}
+\end{figure}
+
+\subsection{Stack Tecnológico Completo}
+
+\begin{table}[H]
+\centering
+\caption{Stack tecnológico del sistema}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Capa} & \textbf{Tecnología} & \textbf{Detalle} \\
+\midrule
+Servidor HTTP & Node.js \texttt{http} módulo & Sin framework (puro) \\
+Base de datos (primaria) & SQLite vía \texttt{better-sqlite3} & WAL mode, synchronous \\
+Base de datos (Docker) & PostgreSQL 15 & Para backend Django \\
+Backend alternativo & Django 4.2 + DRF & REST API con SimpleJWT \\
+Autenticación JWT & HMAC-SHA256 & Implementación manual \\
+Hash de contraseñas & scrypt (Node.js \texttt{crypto}) & 64 bytes output, salt 16 bytes \\
+TOTP & RFC 6238, HMAC-SHA1 & 6 dígitos, período 30s \\
+Email & Nodemailer & SMTP (Gmail u otro) \\
+WhatsApp & TextMeBot API & API REST para envío \\
+QR Codes & Paquete \texttt{qrcode} & Generación de Data URLs \\
+Frontend & HTML + CSS + JavaScript vanilla & SPA single-file (aprox. 1400 lineas) \\
+Frontend (React) & React 18.2.0 & Prototipo parcial (CRA) \\
+Contenedores & Docker + Docker Compose & Orquestación de servicios \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Estructura de Directorios}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    level 1/.style={sibling distance=4.5cm, level distance=1.8cm},
+    level 2/.style={sibling distance=2.2cm, level distance=1.5cm},
+    edge from parent/.style={draw, -{Stealth[length=2mm]}, primary},
+    every node/.style={font=\small\ttfamily, text=darkbg}
+]
+\node[fill=primary!15, rounded corners, text width=2.5cm, align=center] {mfa-ciberseguridad/}
+    child {node[fill=warning!15, rounded corners] {server.js}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {1129 líneas}}
+    }
+    child {node[fill=success!15, rounded corners] {database/}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {data.sqlite}}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {email-config.json}}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {textmebot-config.json}}
+    }
+    child {node[fill=danger!15, rounded corners] {backend/}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {accounts/}}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {mfa_project/}}
+    }
+    child {node[fill=accent!30, rounded corners] {frontend/}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {public/index.html}}
+        child {node[fill=cardbg!30, rounded corners, font=\scriptsize\ttfamily] {src/App.js}}
+    };
+\end{tikzpicture}
+\caption{Estructura de directorios del proyecto}
+\end{figure}
+
+\subsection{Diagrama de Despliegue Docker}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    container/.style={rectangle, rounded corners=10pt, minimum width=4cm, minimum height=2cm, text centered, font=\small\bfseries, line width=1.5pt},
+    arrow/.style={-{Stealth[length=3mm]}, thick}
+]
+
+% Host
+\node[rectangle, rounded corners=15pt, draw=darkbg, line width=2pt, minimum width=14cm, minimum height=8cm, label={[font=\bfseries]above:Host / Docker Engine}] (host) {};
+
+% Containers
+\node[container, draw=primary, fill=primary!5] (db) at (-4, 1) {PostgreSQL 15\\{\scriptsize Puerto: 5432}\\{\scriptsize Volumen: database\_data}};
+\node[container, draw=warning, fill=warning!5] (backend) at (0, 1) {Backend Django\\{\scriptsize Puerto: 8000}\\{\scriptsize manage.py runserver}};
+\node[container, draw=accent, fill=accent!10] (frontend) at (4, 1) {Frontend\\{\scriptsize Puerto: 3000}\\{\scriptsize http-server build/}};
+
+% Node.js
+\node[container, draw=success, fill=success!5] (node) at (0, -2) {Node.js Server\\{\scriptsize Puerto: 3000}\\{\scriptsize server.js (SQLite)}};
+
+% Arrows
+\draw[arrow, primary] (backend) -- node[above, font=\scriptsize] {DATABASE\_URL} (db);
+\draw[arrow, warning] (frontend) -- node[above, font=\scriptsize] {API calls} (backend);
+\draw[arrow, success] (node) -- (db) node[midway, below, font=\scriptsize] {SQLite};
+
+\end{tikzpicture}
+\caption{Diagrama de despliegue Docker Compose}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 3: ALGORITMOS CRIPTOGRÁFICOS
+% ══════════════════════════════════════════════════════════
+\section{Algoritmos Criptográficos y Fundamentos Teóricos}
+
+\subsection{Hash de Contraseñas: scrypt}
+
+\subsubsection{Definición}
+
+scrypt es una función de derivación de clave (KDF) diseñada por Colin Percival en 2009. A diferencia de PBKDF2 o bcrypt, scrypt está diseñado para ser \textbf{intensivo en memoria}, lo que dificulta la implementación de hardware especializado (ASIC/FPGA) para ataques de fuerza bruta.
+
+\subsubsection{Parámetros Utilizados en el Sistema}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{CPU cost (N):} valor por defecto de Node.js (parámetro \texttt{cost} implícito)
+    \item \textbf{Block size (r):} valor por defecto (8)
+    \item \textbf{Parallelization (p):} valor por defecto (1)
+    \item \textbf{Key length:} 64 bytes (512 bits)
+    \item \textbf{Salt:} 16 bytes aleatorios (128 bits) por usuario
+\end{itemize}
+
+\subsubsection{Implementación en el Sistema}
+
+\begin{lstlisting}[style=jsstyle, caption={Función de hash de contraseñas}]
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return `${salt}:${crypto.scryptSync(password, salt, 64).toString('hex')}`;
+}
+
+function verifyPassword(password, stored) {
+  const [salt, hash] = stored.split(':');
+  return crypto.scryptSync(password, salt, 64).toString('hex') === hash;
+}
+\end{lstlisting}
+
+\subsubsection{Fórmula Matemática de scrypt}
+
+La función scrypt se define como:
+
+\begin{equation}
+\text{scrypt}(P, S, N, r, p) = \text{ROMix}(N, \text{PBKDF2-HMAC-SHA256}(P, S, 1, 64 \cdot r), r, p)
+\end{equation}
+
+Donde:
+\begin{itemize}
+    \item $P$ = contraseña (password)
+    \item $S$ = salt (valor aleatorio único por usuario)
+    \item $N$ = costo de CPU (potencia de 2)
+    \item $r$ = tamaño de bloque
+    \item $p$ = factor de paralelización
+\end{itemize}
+
+El consumo de memoria se calcula como:
+
+\begin{equation}
+\text{Memoria} = 128 \cdot N \cdot r \text{ bytes}
+\end{equation}
+
+Con los parametros por defecto de Node.js, esto requiere \textbf{megabytes de memoria por operacion}, haciendo los ataques de hardware costosos.
+
+\subsubsection{Resistencia a Ataques}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Ataque} & \textbf{Mitigación por scrypt} \\
+\midrule
+Rainbow tables & Salt único de 128 bits por usuario \\
+Fuerza bruta (CPU) & Complejidad computacional O(N) \\
+Fuerza bruta (GPU/FPGA) & Uso intensivo de memoria $\rightarrow$ ancho de banda limitado \\
+Fuerza bruta (ASIC) & Costo de memoria por chip prohibitivo \\
+Ataques de diccionario & scrypt es intencionalmente lento \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{JSON Web Tokens (JWT)}
+
+\subsubsection{Estructura de un JWT}
+
+Un JWT consta de tres partes separadas por puntos:
+
+\begin{equation}
+\text{JWT} = \underbrace{\text{Base64URL}(\text{Header})}_{\text{Parte 1}} . \underbrace{\text{Base64URL}(\text{Payload})}_{\text{Parte 2}} . \underbrace{\text{HMAC-SHA256}(\text{Parte1}.\text{Parte2}, \text{Secret})}_{\text{Parte 3}}
+\end{equation}
+
+\subsubsection{Header}
+
+\begin{lstlisting}[style=jsstyle, caption={Estructura del header JWT}]
+{
+  "alg": "HS256",    // Algoritmo de firma
+  "typ": "JWT"       // Tipo de token
+}
+\end{lstlisting}
+
+\subsubsection{Tipos de Payload}
+
+\begin{table}[H]
+\centering
+\caption{Payloads JWT utilizados en el sistema}
+\begin{tabular}{@{}p{3cm}p{4cm}p{4cm}@{}}
+\toprule
+\textbf{Tipo de Token} & \textbf{Payload} & \textbf{Lifetime} \\
+\midrule
+Access Token & \texttt{\{userId, email, mfa\_methods, iat, exp\}} & 1 hora (3600s) \\
+Temp Token (MFA) & \texttt{\{userId, purpose: "mfa\_verify", iat, exp\}} & 5 minutos (300s) \\
+Reset Token & \texttt{\{userId, purpose: "password\_reset", email, iat, exp\}} & 15 minutos (900s) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Implementación}
+
+\begin{lstlisting}[style=jsstyle, caption={Creación y verificación JWT}]
+function createJWT(payload, expiresIn = JWT_EXPIRY) {
+  const header = Buffer.from(
+    JSON.stringify({ alg: 'HS256', typ: 'JWT' })
+  ).toString('base64url');
+  
+  const body = Buffer.from(
+    JSON.stringify({ ...payload, iat: Date.now(), exp: Date.now() + expiresIn })
+  ).toString('base64url');
+  
+  const sig = crypto.createHmac('sha256', JWT_SECRET)
+    .update(`${header}.${body}`)
+    .digest('base64url');
+  
+  return `${header}.${body}.${sig}`;
+}
+
+function verifyJWT(token) {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  
+  const sig = crypto.createHmac('sha256', JWT_SECRET)
+    .update(`${parts[0]}.${parts[1]}`)
+    .digest('base64url');
+  
+  // Comparación en tiempo constante (previene timing attacks)
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(parts[2])))
+    return null;
+  
+  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+  if (payload.exp < Date.now()) return null;
+  
+  return payload;
+}
+\end{lstlisting}
+
+\subsubsection{Protección contra Timing Attacks}
+
+La función \texttt{crypto.timingSafeEqual} compara dos buffers en \textbf{tiempo constante}, lo que previene que un atacante pueda deducir información sobre la firma correcta midiendo las diferencias de tiempo en la comparación.
+
+\begin{equation}
+\text{Sin timingSafeEqual: } t_{\text{comparación}} = f(\text{posición del primer byte diferente}) \neq \text{constante}
+\end{equation}
+
+\begin{equation}
+\text{Con timingSafeEqual: } t_{\text{comparación}} = \text{constante} \text{ (siempre compara todos los bytes)}
+\end{equation}
+
+\subsection{TOTP (Time-based One-Time Password)}
+
+\subsubsection{RFC 6238}
+
+TOTP es la extensión de HOTP (HMAC-based One-Time Password, RFC 4226) basada en tiempo. El algoritmo genera códigos de un solo uso que cambian periódicamente.
+
+\subsubsection{Fórmula}
+
+\begin{equation}
+\text{TOTP}(K, T) = \text{HOTP}(K, T) = \text{Trunc}_{\text{digits}}(\text{HMAC-SHA1}(K, T))
+\end{equation}
+
+Donde:
+\begin{equation}
+T = \left\lfloor \frac{\text{current\_time} - T_0}{X} \right\rfloor
+\end{equation}
+
+\begin{itemize}
+    \item $K$ = secreto compartido (20 bytes, codificado en Base32)
+    \item $T$ = contador de tiempo
+    \item $T_0$ = época de inicio (0 por defecto: 1 enero 1970)
+    \item $X$ = período de tiempo (30 segundos en este sistema)
+\end{itemize}
+
+\subsubsection{Función HOTP (Truncación)}
+
+\begin{equation}
+\text{HOTP}(K, C) = \text{DT}(\text{HMAC-SHA1}(K, C))
+\end{equation}
+
+Donde DT (Dynamic Truncation):
+
+\begin{equation}
+\text{DT}(B) = ((B[\text{offset}] \ \& \ 0x7f) \ll 24) \ | \ (B[\text{offset}+1] \ll 16) \ | \ (B[\text{offset}+2] \ll 8) \ | \ B[\text{offset}+3]
+\end{equation}
+
+\begin{equation}
+\text{OTP} = \text{DT}(B) \mod 10^{\text{digits}}
+\end{equation}
+
+\subsubsection{Parámetros del Sistema}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Parámetro} & \textbf{Valor} \\
+\midrule
+Algoritmo HMAC & SHA-1 \\
+Dígitos & 6 \\
+Período (X) & 30 segundos \\
+Secreto & 20 bytes aleatorios (Base32: 32 caracteres) \\
+Ventana de verificación & $\pm 2$ intervalos ($\pm 60$ segundos) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Ventana de Verificación}
+
+El sistema verifica el código contra \textbf{5 ventanas de tiempo} para tolerar desincronización de reloj:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.9]
+    \draw[->, thick, primary] (-1,0) -- (11,0) node[right] {\small Tiempo};
+    
+    \foreach \i in {0,...,10} {
+        \draw[primary, thick] (\i, -0.3) -- (\i, 0.3);
+        \node[below, font=\scriptsize] at (\i, -0.3) {\i};
+    }
+    
+    \fill[primary!30] (4, -1) rectangle (6, 1);
+    \draw[dashed, danger] (5, -1.5) -- (5, 1.5);
+    \node[above, font=\scriptsize\bfseries, danger] at (5, 1.5) {Ventana actual};
+    
+    \draw[<-{Stealth}, success, thick] (3, 1.8) -- (4.3, 1.8);
+    \draw[-{Stealth}, success, thick] (5.7, 1.8) -- (7, 1.8);
+    \node[above, font=\scriptsize, success] at (5, 1.8) {$\pm 2$ intervalos = $\pm 60$s};
+    
+    \foreach \i in {3,4,6,7} {
+        \fill[warning!50] (\i, -0.8) rectangle (\i+1, -0.5);
+    }
+    \fill[success!50] (5, -0.8) rectangle (6, -0.5);
+    
+    \node[below, font=\tiny, warning] at (4, -0.9) {aceptados};
+    \node[below, font=\tiny, success] at (5.5, -0.9) {ideal};
+\end{tikzpicture}
+\caption{Ventana de verificación TOTP (±2 intervalos)}
+\end{figure}
+
+\subsubsection{Implementación del Sistema}
+
+\begin{lstlisting}[style=jsstyle, caption={Implementación completa TOTP}]
+const BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+function generateTOTPSecret(length = 20) {
+  return base32Encode(crypto.randomBytes(length));
+}
+
+function computeTOTP(secret, timestamp, period, digits) {
+  let counter = Math.floor(timestamp / 1000 / period);
+  const counterBuf = Buffer.alloc(8);
+  for (let i = 7; i >= 0; i--) {
+    counterBuf[i] = counter & 0xff;
+    counter >>= 8;
+  }
+  const hmac = crypto.createHmac('sha1', base32Decode(secret));
+  hmac.update(counterBuf);
+  const hash = hmac.digest();
+  const offset = hash[hash.length - 1] & 0xf;
+  const code = ((hash[offset] & 0x7f) << 24) |
+               ((hash[offset+1] & 0xff) << 16) |
+               ((hash[offset+2] & 0xff) << 8) |
+               (hash[offset+3] & 0xff);
+  return String(code % Math.pow(10, digits)).padStart(digits, '0');
+}
+
+function verifyTOTP(secret, code, window = 2) {
+  const now = Date.now();
+  for (let i = -window; i <= window; i++) {
+    if (computeTOTP(secret, now + i * TOTP_PERIOD * 1000) === code)
+      return true;
+  }
+  return false;
+}
+\end{lstlisting}
+
+\subsubsection{Flujo de Configuración TOTP}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.2cm,
+    action/.style={rectangle, rounded corners=6pt, minimum width=3cm, minimum height=0.9cm, text centered, font=\small, draw=primary, fill=primary!5, line width=0.8pt},
+    decision/.style={diamond, aspect=2.5, minimum width=2.5cm, text centered, font=\small, draw=warning, fill=warning!5, line width=0.8pt},
+    arrow/.style={-{Stealth[length=2.5mm]}, thick, primary}
+]
+
+\node[action] (a1) {Usuario solicita setup};
+\node[action, below=of a1] (a2) {Servidor genera secreto};
+\node[action, below=of a2] (a3) {Genera URL otpauth://};
+\node[action, below=of a3] (a4) {Genera código QR};
+\node[action, below=of a4] (a5) {Usuario escanea QR};
+\node[action, below=of a5] (a6) {App genera código TOTP};
+\node[action, below=of a6] (a7) {Usuario ingresa código};
+\node[decision, below=of a7] (d1) {Código válido?};
+\node[action, below=of d1, xshift=2.5cm] (a8) {Error: código inválido};
+\node[action, below=of d1, xshift=-2.5cm] (a9) {TOTP activado};
+
+\draw[arrow] (a1) -- (a2);
+\draw[arrow] (a2) -- (a3);
+\draw[arrow] (a3) -- (a4);
+\draw[arrow] (a4) -- (a5);
+\draw[arrow] (a5) -- (a6);
+\draw[arrow] (a6) -- (a7);
+\draw[arrow] (a7) -- (d1);
+\draw[arrow, danger] (d1) -- node[right, font=\scriptsize] {No} (a8);
+\draw[arrow, success] (d1) -- node[left, font=\scriptsize] {Sí} (a9);
+
+\end{tikzpicture}
+\caption{Flujo de configuración TOTP}
+\end{figure}
+
+\subsection{OTP (One-Time Password para SMS/WhatsApp/Email)}
+
+\subsubsection{Diferencia con TOTP}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}p{4cm}p{5cm}p{5cm}@{}}
+\toprule
+\textbf{Característica} & \textbf{TOTP} & \textbf{OTP (SMS/WA/Email)} \\
+\midrule
+Generación & Algoritmo HMAC-SHA1 del lado del servidor & Número aleatorio de 6 dígitos \\
+Entrega & App autenticadora (offline) & Canal de comunicación (SMS/WA/Email) \\
+Sincronización & Reloj del servidor y del cliente & Independiente \\
+Expiración & Período de 30 segundos & 5 minutos \\
+Reutilización & No (cambia cada 30s) & No (single-use) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Implementación}
+
+\begin{lstlisting}[style=jsstyle, caption={Gestión OTP}]
+function generateOTP() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function storeOTP(key, code) {
+  otpStore.set(key, {
+    code,
+    expires: Date.now() + OTP_EXPIRY,  // 5 minutos
+    attempts: 0
+  });
+}
+
+function verifyOTP(key, code) {
+  const entry = otpStore.get(key);
+  if (!entry) return false;
+  entry.attempts++;
+  if (entry.attempts > 5) { otpStore.delete(key); return false; }
+  if (Date.now() > entry.expires) { otpStore.delete(key); return false; }
+  if (entry.code !== code) return false;
+  otpStore.delete(key);  // Eliminar después de uso exitoso
+  return true;
+}
+\end{lstlisting}
+
+\subsection{Codificación Base32}
+
+El sistema implementa Base32 manualmente para la codificación de secretos TOTP, siguiendo el estándar RFC 4648:
+
+\begin{lstlisting}[style=jsstyle, caption={Codificación Base32 manual}]
+const BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+function base32Encode(buf) {
+  let bits = '', result = '';
+  for (const b of buf) bits += b.toString(2).padStart(8, '0');
+  for (let i = 0; i + 5 <= bits.length; i += 5)
+    result += BASE32[parseInt(bits.substring(i, i + 5), 2)];
+  return result;
+}
+
+function base32Decode(str) {
+  let bits = '';
+  for (const c of str.toUpperCase()) {
+    const idx = BASE32.indexOf(c);
+    if (idx === -1) continue;
+    bits += idx.toString(2).padStart(5, '0');
+  }
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8)
+    bytes.push(parseInt(bits.substring(i, i + 8), 2));
+  return Buffer.from(bytes);
+}
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 4: MECANISMOS DE SEGURIDAD
+% ══════════════════════════════════════════════════════════
+\section{Mecanismos de Seguridad}
+
+\subsection{Rate Limiting}
+
+\subsubsection{Concepto}
+
+El rate limiting es una técnica que controla la cantidad de solicitudes que un cliente puede realizar en un período de tiempo determinado. Previene ataques de fuerza bruta y denegación de servicio.
+
+\subsubsection{Implementación}
+
+\begin{lstlisting}[style=jsstyle, caption={Implementación de Rate Limiting}]
+const rateLimitMap = new Map();
+
+function rateLimit(key, maxAttempts = 10, windowMs = 60000) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  
+  if (!entry || now - entry.windowStart > windowMs) {
+    rateLimitMap.set(key, { windowStart: now, count: 1 });
+    return { allowed: true, remaining: maxAttempts - 1 };
+  }
+  
+  entry.count++;
+  if (entry.count > maxAttempts) {
+    return {
+      allowed: false,
+      remaining: 0,
+      retryAfter: Math.ceil((windowMs - (now - entry.windowStart)) / 1000)
+    };
+  }
+  return { allowed: true, remaining: maxAttempts - entry.count };
+}
+\end{lstlisting}
+
+\subsubsection{Políticas de Rate Limiting}
+
+\begin{table}[H]
+\centering
+\caption{Límites de tasa por endpoint}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Endpoint} & \textbf{Límite} & \textbf{Ventana} & \textbf{Clave} \\
+\midrule
+\texttt{POST /login/} & 10 intentos & 1 minuto & \texttt{login:\{IP\}} \\
+\texttt{POST /send-otp/} & 5 envíos & 1 minuto & \texttt{sendotp:\{IP\}} \\
+\texttt{POST /verify-mfa/} & 10 intentos & 1 minuto & \texttt{verifymfa:\{IP\}} \\
+\texttt{POST /forgot-password/} & 3 intentos & 1 minuto & \texttt{forgot:\{IP\}} \\
+\texttt{POST /reset-password/} & 5 intentos & 1 minuto & \texttt{reset:\{IP\}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Account Lockout (Bloqueo de Cuenta)}
+
+\subsubsection{Parámetros}
+
+\begin{itemize}
+    \item \textbf{Umbral:} 3 intentos fallidos consecutivos
+    \item \textbf{Duración del bloqueo:} 15 minutos
+    \item \textbf{Desbloqueo automático:} tras la ventana de 15 minutos
+\end{itemize}
+
+\subsubsection{Flujo de Bloqueo}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm,
+    state/.style={rectangle, rounded corners=6pt, minimum width=2.8cm, minimum height=0.8cm, text centered, font=\small, line width=0.8pt},
+    arrow/.style={-{Stealth[length=2.5mm]}, thick}
+]
+
+\node[state, draw=success, fill=success!10] (s1) {Intento 1};
+\node[state, draw=success, fill=success!10, right=of s1] (s2) {Intento 2};
+\node[state, draw=warning, fill=warning!10, right=of s2] (s3) {Intento 3};
+\node[state, draw=danger, fill=danger!10, right=of s3] (s4) {Bloqueado\\{\scriptsize 15 min}};
+\node[state, draw=success, fill=success!10, right=of s4] (s5) {Desbloqueado};
+
+\draw[arrow, success] (s1) -- node[above, font=\scriptsize] {falla} (s2);
+\draw[arrow, success] (s2) -- node[above, font=\scriptsize] {falla} (s3);
+\draw[arrow, danger] (s3) -- node[above, font=\scriptsize] {falla} (s4);
+\draw[arrow, primary] (s4) -- node[above, font=\scriptsize] {timeout} (s5);
+
+\end{tikzpicture}
+\caption{Flujo de account lockout}
+\end{figure}
+
+\subsection{Headers de Seguridad HTTP}
+
+El servidor implementa los siguientes headers de seguridad en cada respuesta:
+
+\begin{table}[H]
+\centering
+\caption{Headers de seguridad HTTP implementados}
+\begin{tabular}{@{}p{4.5cm}p{9cm}@{}}
+\toprule
+\textbf{Header} & \textbf{Función} \\
+\midrule
+\texttt{X-Content-Type-Options: nosniff} & Previene MIME sniffing del navegador \\
+\texttt{X-Frame-Options: DENY} & Previene clickjacking (no permite iframes) \\
+\texttt{X-XSS-Protection: 1; mode=block} & Activa el filtro XSS del navegador \\
+\texttt{Strict-Transport-Security} & Fuerza HTTPS por 1 año con subdominios \\
+\texttt{Referrer-Policy} & Controla la información de referrer \\
+\texttt{Content-Security-Policy} & Restringe fuentes de contenido (scripts, estilos, etc.) \\
+\texttt{Cache-Control: no-store} & Previene caching de datos sensibles \\
+\texttt{Pragma: no-cache} & Compatibilidad con HTTP/1.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Content Security Policy (CSP)}
+
+\begin{lstlisting}[style=jsstyle, caption={Política CSP implementada}]
+'Content-Security-Policy': "default-src 'self'; 
+  script-src 'self' 'unsafe-inline'; 
+  style-src 'self' 'unsafe-inline'; 
+  img-src 'self' data:; 
+  font-src 'self' data:; 
+  connect-src 'self'"
+\end{lstlisting}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{default-src 'self'}: Solo permite recursos del mismo dominio
+    \item \texttt{script-src 'self' 'unsafe-inline'}: Permite scripts inline (necesario para la SPA)
+    \item \texttt{style-src 'self' 'unsafe-inline'}: Permite estilos inline
+    \item \texttt{img-src 'self' data:}: Permite imágenes del dominio y Data URLs (para QR codes)
+    \item \texttt{connect-src 'self'}: Solo permite conexiones al mismo dominio
+\end{itemize}
+
+\subsection{Validación de Entrada}
+
+\begin{lstlisting}[style=jsstyle, caption={Validaciones de entrada}]
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone) {
+  return /^\+?[\d\s\-()]{7,20}$/.test(phone);
+}
+\end{lstlisting}
+
+\begin{table}[H]
+\centering
+\caption{Validaciones de campos}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Campo} & \textbf{Validación} \\
+\midrule
+Email & Formato basico: texto@dominio.extension \\
+Teléfono & 7--20 caracteres, +, dígitos, espacios, guiones, paréntesis \\
+Contraseña & Mínimo 6 caracteres, máximo 128 \\
+OTP/TOTP & String, trim, comparado como string \\
+Nombre & Mínimo 2 caracteres, tipo string \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 5: BASE DE DATOS
+% ══════════════════════════════════════════════════════════
+\section{Base de Datos}
+
+\subsection{Esquema SQLite}
+
+\begin{lstlisting}[style=sqlstyle, caption={Esquema de la tabla users}]
+CREATE TABLE IF NOT EXISTS users (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  email           TEXT    UNIQUE NOT NULL,
+  name            TEXT    NOT NULL DEFAULT '',
+  password        TEXT    NOT NULL,
+  role            TEXT    NOT NULL DEFAULT 'user',
+  phone           TEXT    NOT NULL DEFAULT '',
+  phone_verified  INTEGER NOT NULL DEFAULT 0,
+  email_verified  INTEGER NOT NULL DEFAULT 0,
+  mfa_totp_enabled  INTEGER NOT NULL DEFAULT 0,
+  mfa_totp_secret   TEXT    NOT NULL DEFAULT '',
+  mfa_email_enabled INTEGER NOT NULL DEFAULT 0,
+  mfa_whatsapp_enabled INTEGER NOT NULL DEFAULT 0,
+  failed_attempts   INTEGER NOT NULL DEFAULT 0,
+  is_locked         INTEGER NOT NULL DEFAULT 0,
+  lockout_until     TEXT,
+  created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at        TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+\end{lstlisting}
+
+\subsection{Diagrama Entidad-Relación}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    entity/.style={rectangle, rounded corners=8pt, minimum width=2.5cm, minimum height=1cm, text centered, font=\small\bfseries, draw=primary, fill=primary!5, line width=1pt},
+    attr/.style={rectangle, minimum width=2cm, minimum height=0.5cm, text centered, font=\scriptsize, draw=accent, fill=accent!5},
+    pk/.style={attr, draw=warning, fill=warning!10},
+    fk/.style={attr, draw=danger, fill=danger!10}
+]
+
+\node[entity] (user) at (0, 0) {users};
+
+\node[pk, above left=0.8cm and 1cm of user] (id) {id (PK)};
+\node[attr, above=0.8cm of user] (email) {email (UNIQUE)};
+\node[attr, above right=0.8cm and 1cm of user] (name) {name};
+\node[attr, right=1cm of user, yshift=0.5cm] (pwd) {password};
+\node[attr, right=1cm of user] (role) {role};
+\node[attr, right=1cm of user, yshift=-0.5cm] (phone) {phone};
+\node[attr, below right=0.8cm and 1cm of user] (mfa) {mfa\_totp\_enabled};
+\node[attr, below=0.8cm of user] (lock) {is\_locked};
+\node[attr, below left=0.8cm and 1cm of user] (attempts) {failed\_attempts};
+\node[attr, left=1cm of user, yshift=-0.5cm] (created) {created\_at};
+\node[attr, left=1cm of user, yshift=0.5cm] (secret) {mfa\_totp\_secret};
+
+\foreach \n in {id,email,name,pwd,role,phone,mfa,lock,attempts,created,secret}
+    \draw[-{Stealth}, primary!50] (\n) -- (user);
+
+\end{tikzpicture}
+\caption{Diagrama Entidad-Relación de la tabla users}
+\end{figure}
+
+\subsection{Configuración WAL Mode}
+
+\begin{lstlisting}[style=jsstyle, caption={Configuración de concurrencia SQLite}]
+this.db = new Database(filePath);
+this.db.pragma('journal_mode = WAL');   // Write-Ahead Logging
+this.db.pragma('foreign_keys = ON');    // Integridad referencial
+\end{lstlisting}
+
+WAL (Write-Ahead Logging) permite:
+\begin{itemize}
+    \item Lecturas concurrentes mientras se escribe
+    \item Mejor rendimiento en operaciones de escritura
+    \item Sin bloqueos durante lecturas
+\end{itemize}
+
+\subsection{Migración JSON a SQLite}
+
+El sistema incluye migración automática desde archivos JSON (\texttt{data.json}) a SQLite:
+
+\begin{lstlisting}[style=jsstyle, caption={Lógica de migración}]
+_migrateFromJson() {
+  if (!fs.existsSync(this.jsonPath)) return;
+  const json = JSON.parse(fs.readFileSync(this.jsonPath, 'utf8'));
+  if (!json.users || json.users.length === 0) return;
+  
+  const insert = this.db.prepare(`
+    INSERT OR IGNORE INTO users (...) VALUES (...)
+  `);
+  
+  const tx = this.db.transaction((users) => {
+    for (const u of users) insert.run(...);
+  });
+  tx(json.users);
+  
+  // Renombrar para no importar de nuevo
+  fs.renameSync(this.jsonPath, this.jsonPath + '.backup');
+}
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 6: API COMPLETA
+% ══════════════════════════════════════════════════════════
+\section{API Reference Completa}
+
+\subsection{Endpoints de Autenticación}
+
+\subsubsection{POST \texttt{/api/accounts/register/}}
+
+\begin{infobox}[Registro de Usuario]
+\textbf{Método:} POST \quad \textbf{Auth:} No requerida
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "email": "usuario@ejemplo.com",
+  "password": "miContraseña123",
+  "name": "Juan Pérez"
+}
+\end{lstlisting}
+
+\textbf{Validaciones:}
+\begin{itemize}
+    \item Email: obligatorio, formato válido
+    \item Password: mínimo 6 caracteres, máximo 128
+    \item Email no debe existir previamente
+\end{itemize}
+
+\textbf{Response (201):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "id": 1,
+  "email": "usuario@ejemplo.com",
+  "name": "Juan Pérez",
+  "role": "user",
+  "mfa_totp_enabled": false,
+  "mfa_email_enabled": false,
+  "mfa_whatsapp_enabled": false,
+  "created_at": "2026-06-24T10:00:00.000Z"
+}
+\end{lstlisting}
+
+\textbf{Errores:}
+\begin{itemize}
+    \item \texttt{400 INVALID\_EMAIL}: email no proporcionado
+    \item \texttt{400 WEAK\_PASSWORD}: contraseña $<$ 6 caracteres
+    \item \texttt{400 BAD\_EMAIL}: formato de email inválido
+    \item \texttt{400 LONG\_PASSWORD}: contraseña $>$ 128 caracteres
+    \item \texttt{409 EMAIL\_EXISTS}: email ya registrado
+\end{itemize}
+\end{infobox}
+
+\subsubsection{POST \texttt{/api/accounts/login/}}
+
+\begin{infobox}[Inicio de Sesión]
+\textbf{Método:} POST \quad \textbf{Auth:} No requerida
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "email": "usuario@ejemplo.com",
+  "password": "miContraseña123"
+}
+\end{lstlisting}
+
+\textbf{Response sin MFA (200):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "access": "eyJhbGciOi...",
+  "user": { "id": 1, "email": "...", "name": "..." }
+}
+\end{lstlisting}
+
+\textbf{Response con MFA requerido (200):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "message": "Se requiere verificación MFA",
+  "user_id": 1,
+  "mfa_required": true,
+  "mfa_methods": [
+    { "method": "totp", "label": "App Autenticadora (TOTP)" },
+    { "method": "whatsapp", "label": "Código por WhatsApp" },
+    { "method": "email", "label": "Código por Email" }
+  ],
+  "temp_token": "eyJhbGciOi..."
+}
+\end{lstlisting}
+
+\textbf{Response de cuenta bloqueada (423):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "error": "Cuenta bloqueada por demasiados intentos fallidos",
+  "locked": true,
+  "retryAfter": 900,
+  "code": "ACCOUNT_LOCKED"
+}
+\end{lstlisting}
+
+\textbf{Rate Limiting:} 10 intentos/minuto por IP
+\end{infobox}
+
+\subsubsection{POST \texttt{/api/accounts/verify-mfa/}}
+
+\begin{infobox}[Verificación MFA]
+\textbf{Método:} POST \quad \textbf{Auth:} No requerida (usa temp\_token en body)
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "user_id": 1,
+  "otp": "123456",
+  "method": "totp"   // o "whatsapp" o "email"
+}
+\end{lstlisting}
+
+\textbf{Lógica de verificación por método:}
+\begin{itemize}
+    \item \textbf{totp:} Verifica contra \texttt{verifyTOTP(user.mfa\_totp\_secret, otp)}
+    \item \textbf{whatsapp:} Verifica contra \texttt{verifyOTP("whatsapp\_verify:\{phone\}", otp)}
+    \item \textbf{email:} Verifica contra \texttt{verifyOTP("email\_verify:\{email\}", otp)}
+\end{itemize}
+
+\textbf{Response (200):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "access": "eyJhbGciOi...",
+  "user": { "id": 1, "email": "...", "mfa_totp_enabled": true }
+}
+\end{lstlisting}
+
+\textbf{Rate Limiting:} 10 intentos/minuto por IP
+\end{infobox}
+
+\subsection{Endpoints de OTP}
+
+\subsubsection{POST \texttt{/api/accounts/send-otp/}}
+
+\begin{infobox}[Envío de OTP]
+\textbf{Método:} POST \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "destination": "usuario@ejemplo.com",  // o "+573001234567"
+  "type": "email"                        // o "whatsapp"
+}
+\end{lstlisting}
+
+\textbf{Proceso:}
+\begin{enumerate}
+    \item Genera código OTP de 6 dígitos aleatorios
+    \item Almacena en \texttt{otpStore} con expiración de 5 minutos
+    \item Si type=email: envía email HTML con Nodemailer (si SMTP configurado)
+    \item Si type=whatsapp: envía vía TextMeBot API (si configurado)
+    \item Siempre muestra el código en consola (modo desarrollo)
+\end{enumerate}
+
+\textbf{Response (200):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "success": true,
+  "message": "Código enviado a usuario@ejemplo.com",
+  "code": "123456"  // Solo en modo desarrollo
+}
+\end{lstlisting}
+
+\textbf{Rate Limiting:} 5 envíos/minuto por IP
+\end{infobox}
+
+\subsubsection{POST \texttt{/api/accounts/verify-otp/}}
+
+\begin{infobox}[Verificación OTP]
+\textbf{Método:} POST \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "destination": "usuario@ejemplo.com",
+  "type": "email",
+  "code": "123456"
+}
+\end{lstlisting}
+
+\textbf{Efecto:}
+\begin{itemize}
+    \item Si type=email: marca \texttt{email\_verified = true}, actualiza email
+    \item Si type=whatsapp: marca \texttt{phone\_verified = true}, actualiza teléfono
+\end{itemize}
+\end{infobox}
+
+\subsection{Endpoints de TOTP}
+
+\subsubsection{POST \texttt{/api/accounts/setup-totp/}}
+
+\begin{infobox}[Configuración TOTP]
+\textbf{Método:} POST \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Proceso:}
+\begin{enumerate}
+    \item Genera nuevo secreto TOTP (20 bytes, Base32)
+    \item Actualiza el usuario con el nuevo secreto
+    \item Genera URL \texttt{otpauth://totp/MFASystem:\{email\}?secret=...}
+    \item Genera código QR como Data URL
+\end{enumerate}
+
+\textbf{Response (200):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "secret": "JBSWY3DPEHPK3PXP",
+  "otpauth_url": "otpauth://totp/MFASystem:user@email.com?...",
+  "qr_data_url": "data:image/png;base64,...",
+  "email": "user@email.com"
+}
+\end{lstlisting}
+\end{infobox}
+
+\subsubsection{POST \texttt{/api/accounts/verify-totp-setup/}}
+
+\begin{infobox}[Confirmación TOTP]
+\textbf{Método:} POST \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{ "otp": "123456" }
+\end{lstlisting}
+
+\textbf{Efecto:} Si el código es válido, activa \texttt{mfa\_totp\_enabled = true}
+\end{infobox}
+
+\subsection{Endpoints de Gestión de MFA}
+
+\subsubsection{POST \texttt{/api/accounts/mfa/toggle/}}
+
+\begin{infobox}[Activar/Desactivar MFA]
+\textbf{Método:} POST \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "method": "totp",     // "totp", "email", o "whatsapp"
+  "enabled": true       // true o false
+}
+\end{lstlisting}
+
+\textbf{Prerrequisitos:}
+\begin{itemize}
+    \item Para activar whatsapp: \texttt{phone\_verified} debe ser true
+    \item Para activar email: \texttt{email\_verified} debe ser true
+    \item Para desactivar totp: genera nuevo secreto (reset)
+\end{itemize}
+\end{infobox}
+
+\subsection{Endpoints de Perfil}
+
+\subsubsection{GET \texttt{/api/accounts/profile/}}
+
+\begin{infobox}[Obtener Perfil]
+\textbf{Método:} GET \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Response (200):} Objeto usuario sanitizado (sin campos sensibles)
+\end{infobox}
+
+\subsubsection{PUT \texttt{/api/accounts/profile/}}
+
+\begin{infobox}[Actualizar Perfil]
+\textbf{Método:} PUT \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Request Body:} \texttt{\{"name": "Nuevo Nombre"\}}
+\end{infobox}
+
+\subsubsection{PUT \texttt{/api/accounts/change-password/}}
+
+\begin{infobox}[Cambiar Contraseña]
+\textbf{Método:} PUT \quad \textbf{Auth:} Bearer Token requerido
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "currentPassword": "contraseñaActual",
+  "newPassword": "nuevaContraseña123"
+}
+\end{lstlisting}
+
+\textbf{Validaciones:} Verifica contraseña actual, nueva $\geq$ 6 caracteres
+\end{infobox}
+
+\subsection{Endpoints de Recuperación de Contraseña}
+
+\subsubsection{POST \texttt{/api/accounts/forgot-password/}}
+
+\begin{infobox}[Solicitar Reset]
+\textbf{Método:} POST \quad \textbf{Auth:} No requerida
+
+\textbf{Request Body:} \texttt{\{"email": "user@email.com"\}}
+
+\textbf{Comportamiento:}
+\begin{itemize}
+    \item Siempre retorna 200 (evita enumeración de emails)
+    \item Si el email existe: genera token JWT con purpose \texttt{password\_reset}
+    \item Almacena token en \texttt{otpStore}
+    \item Envía email con enlace de reset (si SMTP configurado)
+    \item Token válido por 15 minutos
+\end{itemize}
+
+\textbf{Rate Limiting:} 3 intentos/minuto por IP
+\end{infobox}
+
+\subsubsection{POST \texttt{/api/accounts/reset-password/}}
+
+\begin{infobox}[Restablecer Contraseña]
+\textbf{Método:} POST \quad \textbf{Auth:} Token de reset
+
+\textbf{Request Body:}
+\begin{lstlisting}[style=jsstyle]
+{
+  "token": "eyJhbGciOi...",
+  "newPassword": "nuevaContraseña123"
+}
+\end{lstlisting}
+
+\textbf{Validaciones:}
+\begin{itemize}
+    \item Token JWT válido (no expirado)
+    \item Purpose del token es \texttt{password\_reset}
+    \item Token no ha sido utilizado previamente
+    \item Email del payload coincide con el usuario actual
+\end{itemize}
+\end{infobox}
+
+\subsection{Endpoints de Administración}
+
+\subsubsection{GET \texttt{/api/admin/users/}}
+
+\begin{infobox}[Listar Usuarios (Admin)]
+\textbf{Método:} GET \quad \textbf{Auth:} Admin Token requerido
+
+\textbf{Response (200):}
+\begin{lstlisting}[style=jsstyle]
+{
+  "users": [ { "id": 1, "email": "...", ... } ],
+  "stats": {
+    "total": 10,
+    "locked": 2,
+    "mfa_enabled": 8,
+    "admins": 1
+  }
+}
+\end{lstlisting}
+\end{infobox}
+
+\subsubsection{PUT \texttt{/api/admin/users/:id/}}
+
+\begin{infobox}[Actualizar Usuario (Admin)]
+\textbf{Método:} PUT \quad \textbf{Auth:} Admin Token requerido
+
+\textbf{Request Body:} \texttt{\{"name": "...", "email": "...", "role": "admin"\}}
+
+\textbf{Restricción:} El admin no puede modificarse a sí mismo
+\end{infobox}
+
+\subsubsection{DELETE \texttt{/api/admin/users/:id/}}
+
+\begin{infobox}[Eliminar Usuario (Admin)]
+\textbf{Método:} DELETE \quad \textbf{Auth:} Admin Token requerido
+
+\textbf{Restricción:} El admin no puede eliminarse a sí mismo
+\end{infobox}
+
+\subsubsection{POST \texttt{/api/admin/users/:id/toggle-lock/}}
+
+\begin{infobox}[Bloquear/Desbloquear (Admin)]
+\textbf{Método:} POST \quad \textbf{Auth:} Admin Token requerido
+
+\textbf{Efecto:} Alterna el estado \texttt{is\_locked} del usuario
+\end{infobox}
+
+\subsubsection{POST \texttt{/api/admin/users/:id/reset-mfa/}}
+
+\begin{infobox}[Resetear MFA (Admin)]
+\textbf{Método:} POST \quad \textbf{Auth:} Admin Token requerido
+
+\textbf{Efecto:} Desactiva todos los métodos MFA y genera nuevo secreto TOTP
+\end{infobox}
+
+\subsection{Endpoints de Configuración}
+
+\subsubsection{\texttt{/api/admin/email-config/}}
+
+\begin{infobox}[Configuración SMTP]
+\textbf{GET:} Retorna configuración (contraseña enmascarada) \\
+\textbf{PUT:} Guarda configuración y prueba conexión SMTP
+
+\textbf{Campos:} host, port, user, pass, from
+\end{infobox}
+
+\subsubsection{\texttt{/api/admin/textmebot-config/}}
+
+\begin{infobox}[Configuración TextMeBot]
+\textbf{GET:} Retorna configuración (apikey enmascarada) \\
+\textbf{PUT:} Guarda configuración de API key
+
+\textbf{Campos:} apikey
+\end{infobox}
+
+\subsubsection{GET \texttt{/api/}}
+
+\begin{infobox}[Auto-descripción API]
+Retorna JSON con todos los endpoints disponibles, sus métodos HTTP, rutas y descripciones.
+\end{infobox}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 7: CASOS DE USO
+% ══════════════════════════════════════════════════════════
+\section{Casos de Uso de la Aplicación}
+
+\subsection{Caso de Uso 1: Registro de Usuario}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=2cm, minimum height=0.7cm, text centered, font=\small\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2.5mm]}, thick},
+    note/.style={rectangle, rounded corners=4pt, font=\scriptsize, text width=3cm, align=left, fill=accent!10, draw=accent}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=4cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=4cm of fe] (api) {API Server};
+\node[participant, draw=danger, fill=danger!10, right=4cm of api] (db) {SQLite};
+
+\draw[msg] (user) -- node[above, font=\scriptsize] {1. Ingresa datos} (fe);
+\draw[msg] (fe) -- node[above, font=\scriptsize] {2. POST /register/} (api);
+\draw[msg] (api) -- node[above, font=\scriptsize] {3. Valida email+password} (db);
+\draw[msg] (api) -- node[above, font=\scriptsize] {4. INSERT user} (db);
+\draw[msg, dashed] (db) -- node[below, font=\scriptsize] {5. OK} (api);
+\draw[msg, dashed] (api) -- node[below, font=\scriptsize] {6. 201 Created} (fe);
+\draw[msg, dashed] (fe) -- node[below, font=\scriptsize] {7. Redirige a Login} (user);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Registro de usuario}
+\end{figure}
+
+\textbf{Flujo detallado:}
+\begin{enumerate}
+    \item El usuario completa el formulario de registro (nombre, email, contraseña, confirmar contraseña)
+    \item El frontend valida que las contraseñas coincidan y que la contraseña tenga fortaleza suficiente
+    \item Se envía \texttt{POST /api/accounts/register/} con los datos
+    \item El servidor valida: formato de email, longitud de contraseña, unicidad del email
+    \item Se crea el usuario con contraseña hasheada (scrypt + salt)
+    \item Se genera un secreto TOTP para el usuario
+    \item Se retorna el usuario creado (201)
+    \item El frontend redirige al login
+\end{enumerate}
+
+\subsection{Caso de Uso 2: Inicio de Sesión sin MFA}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=2cm, minimum height=0.7cm, text centered, font=\small\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2.5mm]}, thick}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=3cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=3cm of fe] (api) {API};
+\node[participant, draw=danger, fill=danger!10, right=3cm of api] (db) {SQLite};
+
+\draw[msg] (user) -- node[above, font=\scriptsize] {1. email+password} (fe);
+\draw[msg] (fe) -- node[above, font=\scriptsize] {2. POST /login/} (api);
+\draw[msg] (api) -- node[above, font=\scriptsize] {3. SELECT user} (db);
+\draw[msg, dashed] (db) -- node[below, font=\scriptsize] {4. user data} (api);
+\draw[msg] (api) -- node[above, font=\scriptsize] {5. verifyPassword()} (api);
+\node[note, right=0.5cm of api, yshift=-2cm] (note1) {6. Credenciales válidas\\7. Sin MFA habilitado\\8. Genera JWT access token\\9. 200 + token};
+\draw[msg, dashed] (api) -- node[below, font=\scriptsize] {10. access token} (fe);
+\draw[msg, dashed] (fe) -- node[below, font=\scriptsize] {11. Dashboard} (user);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Login sin MFA}
+\end{figure}
+
+\subsection{Caso de Uso 3: Inicio de Sesión con MFA}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=1.8cm, minimum height=0.6cm, text centered, font=\scriptsize\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=2.5cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=2.5cm of fe] (api) {API};
+\node[participant, draw=accent, fill=accent!10, right=2.5cm of api] (app) {App TOTP};
+\node[participant, draw=danger, fill=danger!10, right=2.5cm of api] (db) {SQLite};
+
+\draw[msg] (user) -- node[above, font=\tiny] {1. email+pass} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {2. POST /login/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {3. SELECT+verify} (db);
+\draw[msg, dashed] (db) -- node[below, font=\tiny] {4. user} (api);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {5. mfa\_required + temp\_token} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {6. Muestra opciones MFA} (user);
+\draw[msg] (user) -- node[above, font=\tiny] {7. Selecciona TOTP} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {8. Abre app} (app);
+\draw[msg, dashed] (app) -- node[below, font=\tiny] {9. Código 6 dígitos} (user);
+\draw[msg] (user) -- node[above, font=\tiny] {10. Ingresa código} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {11. POST /verify-mfa/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {12. verifyTOTP()} (api);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {13. access token} (fe);
+\draw[msg, dashed] (fe) -- node[below, font=\tiny] {14. Dashboard} (user);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Login con MFA (TOTP)}
+\end{figure}
+
+\subsection{Caso de Uso 4: Login con MFA por WhatsApp}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=1.6cm, minimum height=0.6cm, text centered, font=\scriptsize\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=2cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=2cm of fe] (api) {API};
+\node[participant, draw=accent, fill=accent!10, right=2cm of api] (wa) {TextMeBot};
+
+\draw[msg] (user) -- node[above, font=\tiny] {1. Login OK} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {2. Selecciona WhatsApp} (user);
+\draw[msg] (fe) -- node[above, font=\tiny] {3. POST /send-otp/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {4. Genera OTP} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {5. GET TextMeBot API} (wa);
+\draw[msg, dashed] (wa) -- node[below, font=\tiny] {6. OK} (api);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {7. código enviado} (fe);
+\draw[msg, dashed] (wa) -- node[below, font=\tiny] {8. SMS/WhatsApp} (user);
+\draw[msg] (user) -- node[above, font=\tiny] {9. Ingresa código} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {10. POST /verify-mfa/} (api);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {11. access token} (fe);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Login con MFA por WhatsApp}
+\end{figure}
+
+\subsection{Caso de Uso 5: Configuración de TOTP}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=1.8cm, minimum height=0.6cm, text centered, font=\scriptsize\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=2.5cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=2.5cm of fe] (api) {API};
+\node[participant, draw=danger, fill=danger!10, right=2.5cm of api] (db) {SQLite};
+
+\draw[msg] (user) -- node[above, font=\tiny] {1. Clic Configurar TOTP} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {2. POST /setup-totp/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {3. Genera secreto} (db);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {4. secret + QR} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {5. Muestra QR} (user);
+\draw[msg] (user) -- node[above, font=\tiny] {6. Escanea con app} (user);
+\draw[msg] (user) -- node[above, font=\tiny] {7. Ingresa código} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {8. POST /verify-totp-setup/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {9. verifyTOTP()} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {10. mfa\_totp\_enabled=true} (db);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {11. TOTP activado} (fe);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Configuración TOTP}
+\end{figure}
+
+\subsection{Caso de Uso 6: Recuperación de Contraseña}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=1.6cm, minimum height=0.6cm, text centered, font=\scriptsize\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=2cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=2cm of fe] (api) {API};
+\node[participant, draw=accent, fill=accent!10, right=2cm of api] (email) {SMTP Server};
+
+\draw[msg] (user) -- node[above, font=\tiny] {1. Olvidé contraseña} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {2. POST /forgot-password/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {3. Genera reset token} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {4. Envía email} (email);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {5. Si el email existe...} (fe);
+\draw[msg, dashed] (email) -- node[below, font=\tiny] {6. Email con enlace} (user);
+\draw[msg] (user) -- node[above, font=\tiny] {7. Click en enlace} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {8. Nueva contraseña} (user);
+\draw[msg] (fe) -- node[above, font=\tiny] {9. POST /reset-password/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {10. Verifica token} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {11. Actualiza password} (db);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {12. Contraseña actualizada} (fe);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Recuperación de contraseña}
+\end{figure}
+
+\subsection{Caso de Uso 7: Administración de Usuarios}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=1.8cm, minimum height=0.6cm, text centered, font=\scriptsize\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[participant, draw=danger, fill=danger!10] (admin) {Admin};
+\node[participant, draw=warning, fill=warning!10, right=2cm of admin] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=2cm of fe] (api) {API};
+\node[participant, draw=danger, fill=danger!10, right=2cm of api] (db) {SQLite};
+
+\draw[msg] (admin) -- node[above, font=\tiny] {1. Login como admin} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {2. GET /admin/users/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {3. Verifica role=admin} (db);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {4. Lista usuarios + stats} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {5. Panel admin} (admin);
+\draw[msg] (admin) -- node[above, font=\tiny] {6. Bloquear usuario X} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {7. POST toggle-lock/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {8. UPDATE user} (db);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {9. Usuario bloqueado} (fe);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Administración de usuarios}
+\end{figure}
+
+\subsection{Caso de Uso 8: Verificación de Email/Teléfono}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    participant/.style={rectangle, rounded corners=6pt, minimum width=1.8cm, minimum height=0.6cm, text centered, font=\scriptsize\bfseries, line width=0.8pt},
+    msg/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=2.5cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=2.5cm of fe] (api) {API};
+\node[participant, draw=accent, fill=accent!10, right=2.5cm of api] (smtp) {SMTP/WA};
+
+\draw[msg] (user) -- node[above, font=\tiny] {1. Editar perfil} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {2. Send OTP email} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {3. Envía código} (smtp);
+\draw[msg, dashed] (smtp) -- node[below, font=\tiny] {4. Código} (user);
+\draw[msg] (user) -- node[above, font=\tiny] {5. Ingresa código} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {6. POST /verify-otp/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {7. email\_verified=true} (db);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {8. Email verificado} (fe);
+
+\end{tikzpicture}
+\caption{Diagrama de secuencia: Verificación de email}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 8: FRONTEND
+% ══════════════════════════════════════════════════════════
+\section{Frontend: Aplicación de una Página}
+
+\subsection{Arquitectura SPA}
+
+El frontend es una aplicación de una sola página (SPA) construida con HTML, CSS y JavaScript vanilla, contenida en un solo archivo (\texttt{index.html}, $\sim$1400 líneas).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm,
+    view/.style={rectangle, rounded corners=6pt, minimum width=3cm, minimum height=0.8cm, text centered, font=\small, draw=primary, fill=primary!5, line width=0.8pt}
+]
+
+\node[view] (v1) at (0, 0) {viewLogin};
+\node[view] (v2) at (4, 0) {viewRegister};
+\node[view] (v3) at (8, 0) {viewMfaVerify};
+\node[view] (v4) at (0, -1.5) {viewForgotPassword};
+\node[view] (v5) at (4, -1.5) {viewResetPassword};
+\node[view] (v6) at (8, -1.5) {viewDashboard};
+\node[view] (v7) at (4, -3) {viewAdmin};
+
+\draw[->, primary, thick] (v1) -- (v2);
+\draw[->, primary, thick] (v1) -- (v3);
+\draw[->, primary, thick] (v1) -- (v4);
+\draw[->, primary, thick] (v4) -- (v5);
+\draw[->, primary, thick] (v3) -- (v6);
+\draw[->, primary, thick] (v1) -- (v7);
+\draw[->, primary, thick] (v6) -- (v7);
+
+\end{tikzpicture}
+\caption{Diagrama de navegación de vistas SPA}
+\end{figure}
+
+\subsection{Vistas Disponibles}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Vista} & \textbf{Función} \\
+\midrule
+\texttt{viewLogin} & Formulario de inicio de sesión (email + contraseña) \\
+\texttt{viewRegister} & Formulario de registro (nombre + email + contraseña) \\
+\texttt{viewMfaVerify} & Selección de método MFA + ingreso de código \\
+\texttt{viewForgotPassword} & Solicitud de recuperación de contraseña \\
+\texttt{viewResetPassword} & Ingreso de token + nueva contraseña \\
+\texttt{viewDashboard} & Panel de usuario: perfil, métodos MFA, seguridad \\
+\texttt{viewAdmin} & Panel de administración: usuarios, SMTP, WhatsApp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Modales}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Modal} & \textbf{Función} \\
+\midrule
+\texttt{modalEditProfile} & Editar nombre, email (con verificación OTP), teléfono \\
+\texttt{modalMfaDetail} & Configurar/activar/desactivar un método MFA \\
+\texttt{modalTotpSetup} & Mostrar QR + verificar código TOTP \\
+\texttt{modalChangePassword} & Cambiar contraseña actual \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Gestión de Estado}
+
+\begin{lstlisting}[style=jsstyle, caption={Estado global de la aplicación SPA}]
+const state = {
+  userId: null,
+  email: '',
+  name: '',
+  token: '',          // JWT access token
+  tempToken: '',      // JWT temporal para MFA
+  mfaTempUserId: null,
+  selectedMfaMethod: '',
+  _otpauthUrl: '',
+  profile: null       // Datos del perfil del usuario
+};
+\end{lstlisting}
+
+\subsection{Sistema de Notificaciones Toast}
+
+\begin{lstlisting}[style=jsstyle, caption={Sistema de notificaciones}]
+function toast(message, type = 'info', duration = 3000) {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = message;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
+  }, duration);
+}
+\end{lstlisting}
+
+\subsection{Diseño Visual}
+
+\begin{table}[H]
+\centering
+\caption{Sistema de diseño del frontend}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Elemento} & \textbf{Valor} \\
+\midrule
+Tema & Dark (fondo: \#0f172a) \\
+Color primario & Indigo (\#6366f1) \\
+Color de acento & Light indigo (\#a5b4fc) \\
+Fondo de tarjetas & \#1e293b \\
+Bordes & \#334155 \\
+Texto principal & \#f1f5f9 \\
+Texto secundario & \#94a3b8 \\
+Tipografía & Segoe UI, system-ui \\
+Animaciones & fadeIn, slideUp, spin \\
+Responsive & Breakpoint: 480px \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 9: BACKEND DJANGO (ALTERNATIVO)
+% ══════════════════════════════════════════════════════════
+\section{Backend Django (Implementación Alternativa)}
+
+\subsection{Arquitectura}
+
+El proyecto incluye una implementación alternativa del backend utilizando Django REST Framework con PostgreSQL.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, rounded corners=8pt, minimum width=3.5cm, minimum height=1cm, text centered, font=\small, line width=0.8pt}
+]
+
+\node[box, draw=primary, fill=primary!5] (django) {Django 4.2 + DRF};
+\node[box, draw=warning, fill=warning!5, right=2cm of django] (jwt) {SimpleJWT};
+\node[box, draw=success, fill=success!5, right=2cm of jwt] (pyotp) {pyotp (TOTP)};
+\node[box, draw=danger, fill=danger!5, below=1.5cm of django] (pg) {PostgreSQL 15};
+\node[box, draw=accent, fill=accent!10, below=1.5cm of jwt] (cors) {django-cors-headers};
+
+\draw[->, primary, thick] (django) -- (jwt);
+\draw[->, warning, thick] (django) -- (pyotp);
+\draw[->, success, thick] (django) -- (pg);
+\draw[->, danger, thick] (django) -- (cors);
+
+\end{tikzpicture}
+\caption{Componentes del backend Django}
+\end{figure}
+
+\subsection{Modelo de Usuario Custom}
+
+\begin{lstlisting}[style=pythonstyle, caption={CustomUser model}]
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)
+    mfa_enabled = models.BooleanField(default=False)
+    mfa_secret = models.TextField(blank=True, null=True)
+    failed_attempts = models.IntegerField(default=0)
+    is_locked = models.BooleanField(default=False)
+    lockout_until = models.DateTimeField(blank=True, null=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+\end{lstlisting}
+
+\subsection{Vistas API (DRF)}
+
+\begin{lstlisting}[style=pythonstyle, caption={Vistas de autenticación Django}]
+class LoginView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        user = authenticate(
+            email=serializer.data['email'],
+            password=serializer.data['password']
+        )
+        if user:
+            if user.is_locked:
+                # Verificar si el bloqueo expiró
+                if user.lockout_until > timezone.now():
+                    return Response({'error': 'Cuenta bloqueada'}, status=403)
+                # Desbloquear automáticamente
+                user.is_locked = False
+                user.failed_attempts = 0
+                user.save()
+            
+            if user.mfa_enabled:
+                return Response({'message': 'MFA required', 'user_id': user.id})
+            
+            refresh = RefreshToken.for_user(user)
+            return Response({'refresh': str(refresh), 'access': str(refresh.access_token)})
+        
+        # Manejar intento fallido
+        user.failed_attempts += 1
+        if user.failed_attempts >= 3:
+            user.is_locked = True
+            user.lockout_until = timezone.now() + timedelta(minutes=15)
+        user.save()
+\end{lstlisting}
+
+\subsection{Configuracion JWT (SimpleJWT)}
+
+\begin{lstlisting}[style=pythonstyle, caption={Configuración SimpleJWT}]
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+\end{lstlisting}
+
+\subsection{Comparación: Node.js vs Django}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}p{3.5cm}p{5cm}p{5cm}@{}}
+\toprule
+\textbf{Característica} & \textbf{Node.js (server.js)} & \textbf{Django} \\
+\midrule
+JWT & Implementación manual & SimpleJWT \\
+TOTP & Implementación manual & pyotp (librería) \\
+Base de datos & SQLite (mejorado) & PostgreSQL \\
+Rate limiting & Implementación manual & django-axes \\
+ORM & Sin ORM & Django ORM \\
+MFA methods & TOTP + WhatsApp + Email & Solo TOTP \\
+Admin panel & Completo & Django Admin \\
+Frontend & SPA vanilla incluido & Externo \\
+\bottomrule
+\end{tabular}
+\caption{Comparación entre implementaciones Node.js y Django}
+\end{table}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 10: DOCKER
+% ══════════════════════════════════════════════════════════
+\section{Despliegue con Docker}
+
+\subsection{docker-compose.yml}
+
+\begin{lstlisting}[style=pythonstyle, caption={Configuración Docker Compose}]
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - ./database_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: mfa_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/mfa_db
+      - DJANGO_DEBUG=True
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+\end{lstlisting}
+
+\subsection{Puertos del Sistema}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Servicio} & \textbf{Puerto} & \textbf{Descripción} \\
+\midrule
+Node.js Server & 3000 & Servidor principal (SQLite) \\
+Django Backend & 8000 & API REST (PostgreSQL) \\
+Frontend (React) & 3000 & SPA (Create React App) \\
+PostgreSQL & 5432 & Base de datos relacional \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 11: ANÁLISIS DE VULNERABILIDADES
+% ══════════════════════════════════════════════════════════
+\section{Análisis de Vulnerabilidades y Mitigaciones}
+
+\subsection{Vulnerabilidades Identificadas}
+
+\begin{table}[H]
+\centering
+\caption{Matriz de vulnerabilidades}
+\begin{tabular}{@{}cllcl@{}}
+\toprule
+\# & \textbf{Vulnerabilidad} & \textbf{Severidad} & \textbf{Estado} \\
+\midrule
+1 & HTTP plano (sin TLS/HTTPS) & \textcolor{danger}{\textbf{CRÍTICA}} & No mitigado \\
+2 & OTP en respuesta JSON & \textcolor{warning}{\textbf{MEDIA}} & Por diseño (dev) \\
+3 & Sin JWT ID (jti) para revocación & \textcolor{warning}{\textbf{MEDIA}} & No mitigado \\
+4 & temp\_token con acceso a API & \textcolor{accent}{\textbf{BAJA}} & Por diseño \\
+5 & CORS permisivo (comodin) & \textcolor{accent}{\textbf{BAJA}} & Aceptable para MVP \\
+6 & Sin refresh tokens & \textcolor{accent}{\textbf{BAJA}} & Por diseño \\
+7 & Contraseña mín. 6 chars (sin complejidad) & \textcolor{accent}{\textbf{BAJA}} & Mejorable \\
+8 & Sin bloqueo permanente por IP & \textcolor{accent}{\textbf{BAJA}} & No mitigado \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Mitigaciones Implementadas}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    threat/.style={rectangle, rounded corners=4pt, font=\scriptsize, text width=4cm, align=left, draw=danger, fill=danger!5},
+    mitigation/.style={rectangle, rounded corners=4pt, font=\scriptsize, text width=4cm, align=left, draw=success, fill=success!5}
+]
+
+\node[threat] (t1) {Intercepción de tráfico};
+\node[mitigation, right=1cm of t1] (m1) {\textbf{Pendiente:} Implementar HTTPS};
+
+\node[threat, below=of t1] (t2) {Fuerza bruta a contraseñas};
+\node[mitigation, right=1cm of t2] (m2) {Rate limiting + Lockout + scrypt};
+
+\node[threat, below=of t2] (t3) {Fuerza bruta a OTP};
+\node[mitigation, right=1cm of t3] (m3) {5 intentos/OTP + Rate limit/IP};
+
+\node[threat, below=of t3] (t4) {Replay attack (OTP)};
+\node[mitigation, right=1cm of t4] (m4) {Single-use + expira 5 min};
+
+\node[threat, below=of t4] (t5) {Manipulación de JWT};
+\node[mitigation, right=1cm of t5] (m5) {HMAC-SHA256 + timingSafeEqual};
+
+\node[threat, below=of t5] (t6) {XSS};
+\node[mitigation, right=1cm of t6] (m6) {CSP headers + X-XSS-Protection};
+
+\node[threat, below=of t6] (t7) {Clickjacking};
+\node[mitigation, right=1cm of t7] (m7) {X-Frame-Options: DENY};
+
+\node[threat, below=of t7] (t8) {Ataques de diccionario a hashes};
+\node[mitigation, right=1cm of t8] (m8) {scrypt + salt único por usuario};
+
+\end{tikzpicture}
+\caption{Mapa de amenazas y mitigaciones}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 12: DIAGRAMA DE ESTADOS
+% ══════════════════════════════════════════════════════════
+\section{Diagrama de Estados del Usuario}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=2cm,
+    state/.style={circle, draw=primary, fill=primary!5, minimum size=1.5cm, text centered, font=\small, line width=1pt},
+    active/.style={state, fill=success!15, draw=success},
+    locked/.style={state, fill=danger!15, draw=danger},
+    arrow/.style={-{Stealth[length=3mm]}, thick}
+]
+
+\node[active] (new) {Nuevo};
+\node[active, right=3cm of new] (verified) {Verificado};
+\node[active, right=3cm of verified] (mfa) {MFA Activado};
+\node[locked, below=2cm of verified] (locked) {Bloqueado};
+
+\draw[arrow] (new) -- node[above, font=\scriptsize] {Verificar email/teléfono} (verified);
+\draw[arrow] (verified) -- node[above, font=\scriptsize] {Configurar MFA} (mfa);
+\draw[arrow, danger] (verified) -- node[right, font=\scriptsize] {3 fallos de login} (locked);
+\draw[arrow, danger] (mfa) -- node[right, font=\scriptsize] {3 fallos de login} (locked);
+\draw[arrow, success] (locked) -- node[left, font=\scriptsize] {15 min timeout} (verified);
+
+\end{tikzpicture}
+\caption{Diagrama de estados del ciclo de vida del usuario}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 13: MATRIZ DE CASOS DE USO
+% ══════════════════════════════════════════════════════════
+\section{Matriz Completa de Casos de Uso}
+
+\begin{table}[H]
+\centering
+\caption{Todos los casos de uso de la aplicación MFA}
+\begin{tabular}{@{}p{4.5cm}p{3cm}p{3cm}p{3cm}@{}}
+\toprule
+\textbf{Caso de Uso} & \textbf{Actor} & \textbf{Endpoint(s)} & \textbf{Método MFA} \\
+\midrule
+\multicolumn{4}{l}{\textbf{\textcolor{primary}{Autenticación}}} \\
+\midrule
+Registro de usuario & Usuario & POST /register/ & Ninguno \\
+Login sin MFA & Usuario & POST /login/ & Ninguno \\
+Login con TOTP & Usuario & POST /login/ + /verify-mfa/ & TOTP \\
+Login con WhatsApp & Usuario & POST /login/ + /send-otp/ + /verify-mfa/ & WhatsApp \\
+Login con Email & Usuario & POST /login/ + /send-otp/ + /verify-otp/ & Email \\
+Recuperar contraseña & Usuario & POST /forgot-password/ + /reset-password/ & Email \\
+Cambiar contraseña & Usuario & PUT /change-password/ & Ninguno \\
+\midrule
+\multicolumn{4}{l}{\textbf{\textcolor{primary}{Gestión de MFA}}} \\
+\midrule
+Configurar TOTP & Usuario & POST /setup-totp/ + /verify-totp-setup/ & TOTP \\
+Activar/desactivar TOTP & Usuario & POST /mfa/toggle/ & TOTP \\
+Activar/desactivar WhatsApp & Usuario & POST /mfa/toggle/ & WhatsApp \\
+Activar/desactivar Email & Usuario & POST /mfa/toggle/ & Email \\
+Verificar email & Usuario & POST /send-otp/ + /verify-otp/ & OTP \\
+Verificar teléfono & Usuario & POST /send-otp/ + /verify-otp/ & OTP \\
+\midrule
+\multicolumn{4}{l}{\textbf{\textcolor{primary}{Perfil}}} \\
+\midrule
+Ver perfil & Usuario & GET /profile/ & Ninguno \\
+Actualizar perfil & Usuario & PUT /profile/ & Ninguno \\
+\midrule
+\multicolumn{4}{l}{\textbf{\textcolor{primary}{Administración}}} \\
+\midrule
+Listar usuarios & Admin & GET /admin/users/ & Ninguno \\
+Ver usuario & Admin & GET /admin/users/:id/ & Ninguno \\
+Editar usuario & Admin & PUT /admin/users/:id/ & Ninguno \\
+Eliminar usuario & Admin & DELETE /admin/users/:id/ & Ninguno \\
+Bloquear/desbloquear & Admin & POST /admin/users/:id/toggle-lock/ & Ninguno \\
+Resetear MFA & Admin & POST /admin/users/:id/reset-mfa/ & Ninguno \\
+Configurar SMTP & Admin & GET/PUT /admin/email-config/ & Ninguno \\
+Configurar WhatsApp & Admin & GET/PUT /admin/textmebot-config/ & Ninguno \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 14: DEPENDENCIAS
+% ══════════════════════════════════════════════════════════
+\section{Dependencias y Licencias}
+
+\subsection{Node.js (package.json)}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Paquete} & \textbf{Versión} & \textbf{Propósito} \\
+\midrule
+better-sqlite3 & \textasciicircum12.11.1 & Base de datos SQLite síncrona \\
+nodemailer & \textasciicircum9.0.1 & Envío de emails SMTP \\
+qrcode & \textasciicircum1.5.4 & Generación de códigos QR \\
+sql.js & \textasciicircum1.14.1 & SQLite en WASM (legado/migración) \\
+twilio & \textasciicircum6.0.2 & SDK Twilio (SMS/WhatsApp) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Python Django (requirements.txt)}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Paquete} & \textbf{Versión} & \textbf{Propósito} \\
+\midrule
+Django & $\geq$4.2, $<$5.0 & Framework web Python \\
+djangorestframework & $\geq$3.14.0 & API REST para Django \\
+djangorestframework-simplejwt & $\geq$5.3.0 & JWT authentication \\
+pyotp & $\geq$2.9.0 & Generación/verificación TOTP \\
+qrcode[pil] & $\geq$7.4.2 & Generación de QR codes \\
+django-cors-headers & $\geq$4.3.0 & Manejo de CORS \\
+psycopg2-binary & $\geq$2.9.9 & Adaptador PostgreSQL \\
+django-environ & $\geq$0.11.2 & Variables de entorno \\
+django-axes & $\geq$6.1.1 & Protección contra brute force \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Frontend React (package.json)}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Paquete} & \textbf{Versión} & \textbf{Propósito} \\
+\midrule
+react & \textasciicircum18.2.0 & Biblioteca UI \\
+react-dom & \textasciicircum18.2.0 & Renderer DOM para React \\
+axios & \textasciicircum1.6.0 & HTTP client (no utilizado) \\
+react-scripts & \textasciicircum4.0.0 & Create React App \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 15: FLUJO DE TOKENS
+% ══════════════════════════════════════════════════════════
+\section{Ciclo de Vida de los Tokens}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    token/.style={rectangle, rounded corners=8pt, minimum width=3.5cm, minimum height=1cm, text centered, font=\small, line width=1pt},
+    arrow/.style={-{Stealth[length=3mm]}, thick}
+]
+
+\node[token, draw=success, fill=success!5] (reg) {REGISTRO\\{\scriptsize Sin token}};
+\node[token, draw=primary, fill=primary!5, right=3cm of reg] (login) {LOGIN (sin MFA)\\{\scriptsize Access token (1h)}};
+\node[token, draw=warning, fill=warning!5, below=2cm of login] (mfa) {LOGIN (con MFA)\\{\scriptsize Temp token (5 min)}};
+\node[token, draw=accent, fill=accent!10, right=3cm of mfa] (access) {ACCESS TOKEN\\{\scriptsize userId + email + mfa\_methods}};
+\node[token, draw=danger, fill=danger!5, below=2cm of mfa] (reset) {RESET TOKEN\\{\scriptsize userId + purpose + email}};
+
+\draw[arrow] (reg) -- node[above, font=\scriptsize] {POST /register/} (login);
+\draw[arrow] (login) -- node[above, font=\scriptsize] {Sin MFA} (access);
+\draw[arrow] (login) -- node[left, font=\scriptsize] {Con MFA} (mfa);
+\draw[arrow, success] (mfa) -- node[above, font=\scriptsize] {verify-mfa OK} (access);
+\draw[arrow, danger] (login) -- node[below, font=\scriptsize, sloped] {forgot-password} (reset);
+
+\end{tikzpicture}
+\caption{Ciclo de vida de los tokens JWT en el sistema}
+\end{figure}
+
+\subsection{Especificación de Tokens}
+
+\begin{lstlisting}[style=jsstyle, caption={Codificación Base64URL de JWT}]
+// Header
+{"alg":"HS256","typ":"JWT"}
+
+// Payload (Access Token)
+{
+  "userId": 1,
+  "email": "user@email.com",
+  "mfa_methods": ["totp", "whatsapp"],
+  "iat": 1719225600000,
+  "exp": 1719229200000
+}
+
+// Payload (Temp Token)
+{
+  "userId": 1,
+  "purpose": "mfa_verify",
+  "iat": 1719225600000,
+  "exp": 1719225900000
+}
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 16: RECOMENDACIONES
+% ══════════════════════════════════════════════════════════
+\section{Recomendaciones de Seguridad para Producción}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Implementar HTTPS} con certificados Let's Encrypt (gratuitos)
+    \item \textbf{Agregar JWT ID (\texttt{jti})} con blacklist en Redis o SQLite para revocación de tokens
+    \item \textbf{No devolver OTP en la respuesta JSON} en producción (flag \texttt{NODE\_ENV=production})
+    \item \textbf{Exigir complejidad de contraseña}: mayúsculas, números, símbolos, mínimo 8 caracteres
+    \item \textbf{Agregar refresh tokens} con rotación para evitar relogin frecuente
+    \item \textbf{Implementar bloqueo permanente por IP} después de N violaciones de rate limit
+    \item \textbf{Restringir CORS} a dominios específicos en producción
+    \item \textbf{Validar el purpose del temp\_token} en \texttt{getAuthUser}
+    \item \textbf{Implementar logging centralizado} (ELK, Datadog, etc.)
+    \item \textbf{Agregar monitoreo de seguridad} para detectar anomalías
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════
+% SECCIÓN 17: GLOSARIO
+% ══════════════════════════════════════════════════════════
+\section{Glosario de Términos}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}p{3.5cm}p{10cm}@{}}
+\toprule
+\textbf{Término} & \textbf{Definición} \\
+\midrule
+MFA & Multi-Factor Authentication -- autenticación que requiere dos o más factores \\
+TOTP & Time-based One-Time Password -- código efímero basado en tiempo (RFC 6238) \\
+HOTP & HMAC-based One-Time Password -- código efímero basado en contador (RFC 4226) \\
+OTP & One-Time Password -- código de un solo uso, típicamente 6 dígitos \\
+JWT & JSON Web Token -- token autocontenido con firma criptográfica (RFC 7519) \\
+HMAC-SHA256 & Algoritmo de firma usando clave secreta compartida y función hash SHA-256 \\
+HMAC-SHA1 & Algoritmo de firma usando clave secreta compartida y SHA-1 (para TOTP) \\
+scrypt & Función de derivación de clave con uso intensivo de memoria (RFC 7914) \\
+Base32 & Esquema de codificación que representa datos binarios con 32 caracteres alfanuméricos \\
+Base64URL & Variante de Base64 segura para URLs (sin +, /, ni =) \\
+WAL & Write-Ahead Logging -- modo de SQLite para concurrencia de lectura/escritura \\
+timingSafeEqual & Comparación de buffers en tiempo constante para prevenir timing attacks \\
+Rate Limiting & Control de frecuencia de solicitudes por cliente \\
+Account Lockout & Bloqueo temporal de cuenta tras intentos fallidos \\
+CORS & Cross-Origin Resource Sharing -- política de acceso entre dominios \\
+CSP & Content Security Policy -- política de seguridad de contenido \\
+SMTP & Simple Mail Transfer Protocol -- protocolo de envío de emails \\
+SPA & Single Page Application -- aplicación de una sola página \\
+DRF & Django REST Framework -- toolkit para APIs REST en Django \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════
+% CONCLUSIÓN
+% ══════════════════════════════════════════════════════════
+\section{Conclusión}
+
+Este documento técnico ha proporcionado un análisis exhaustivo del Sistema de Autenticación Multifactor (MFA), cubriendo:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Arquitectura}: Sistema dual con Node.js (principal) y Django (alternativo), orquestados mediante Docker Compose
+    \item \textbf{Criptografía}: Implementación detallada de scrypt, HMAC-SHA256 (JWT), HMAC-SHA1 (TOTP), y generación de OTP
+    \item \textbf{Seguridad}: Rate limiting, account lockout, headers HTTP de seguridad, CSP, validación de entrada
+    \item \textbf{APIs}: 25+ endpoints documentados con request/response bodies completos
+    \item \textbf{Casos de uso}: 8 flujos principales con diagramas de secuencia detallados
+    \item \textbf{Base de datos}: Esquema SQLite con WAL mode, migración JSON, y diagrama ER
+    \item \textbf{Frontend}: SPA vanilla con dark theme, 7 vistas, 4 modales, y sistema de notificaciones
+    \item \textbf{Vulnerabilidades}: 8 vulnerabilidades identificadas con matriz de mitigaciones
+\end{itemize}
+
+El sistema demuestra la implementación práctica de conceptos fundamentales de ciberseguridad en una aplicación real, proporcionando una base sólida para futuras mejoras hacia un entorno de producción.
+
+\end{document}

@@ -1,0 +1,429 @@
+\documentclass[12pt,a4paper]{article}
+
+% ─── Packages ──────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\geometry{top=2.54cm, bottom=2.54cm, left=3.17cm, right=3.17cm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage{adjustbox}
+\usepackage{afterpage}
+\usepackage{titling}
+
+% ─── APA Setup ─────────────────────────────────────────────
+\setlength{\parindent}{0.5in}
+\setlength{\parskip}{0pt}
+\onehalfspacing
+
+% ─── Colores ───────────────────────────────────────────────
+\definecolor{unipam}{HTML}{003366}
+\definecolor{unipamlight}{HTML}{005599}
+\definecolor{primary}{HTML}{1a365d}
+\definecolor{accent}{HTML}{2b6cb0}
+\definecolor{success}{HTML}{276749}
+\definecolor{warning}{HTML}{c05621}
+\definecolor{danger}{HTML}{c53030}
+\definecolor{txgray}{HTML}{4a5568}
+
+% ─── Headers APA ───────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\textrm{Conde y Redondo}}
+\fancyhead[R]{\footnotesize\textrm{Sistema MFA}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% ─── APA Title format ─────────────────────────────────────
+\titleformat{\section}
+  {\normalsize\bfseries\centering}{}{0em}{}
+\titleformat{\subsection}
+  {\normalsize\bfseries}{}{0em}{}
+\titleformat{\subsubsection}
+  {\normalsize\itshape}{}{0em}{}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=black
+}
+
+% ══════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Portada APA ──────────────────────────────────────────
+\thispagestyle{empty}
+\begin{center}
+\vspace*{1in}
+
+{\normalsize\textbf{UNIVERSIDAD DE PAMPLONA}}\\[0.2cm]
+{\normalsize Facultad de Arquitectura e Ingenieria}\\[0.2cm]
+{\normalsize Departamento de Ingenieria de Sistemas}
+
+\vspace{1in}
+
+{\normalsize\textbf{SISTEMA DE AUTENTICACION MULTIFACTOR (MFA)}}
+
+\vspace{1in}
+
+{\normalsize\textbf{Juan David Conde Duarte}}\\[0.2cm]
+{\normalsize\textbf{Santiago Esteban Redondo Perdomo}}
+
+\vspace{1in}
+
+{\normalsize Docente: Luz Marina}
+
+\vspace{1in}
+
+{\normalsize Pamplona, Norte de Santander --- Colombia}\\[0.2cm]
+{\normalsize 2026}
+
+\end{center}
+
+% ─── Resumen APA ──────────────────────────────────────────
+\newpage
+\thispagestyle{empty}
+\begin{center}
+{\normalsize\textbf{RESUMEN}}
+\end{center}
+
+\vspace{0.5cm}
+
+{\small Este informe documenta el diseno, implementacion y evaluacion de un Sistema de Autenticacion Multifactor (MFA) orientado a fortalecer la seguridad en el acceso a aplicaciones web. El proyecto surge de la necesidad de mitigar las vulnerabilidades asociadas a la autenticacion basada unicamente en contrasenas, considerada insuficiente frente a los actuales vectores de ataque en el entorno digital. El sistema implementa tres metodos de verificacion: TOTP (Time-based One-Time Password) compatible con aplicaciones autenticadoras estandar, envio de codigos de verificacion por WhatsApp mediante TextMeBot API, y envio de codigos por correo electronico utilizando SMTP. Adicionalmente, el proyecto incorpora mecanismos de seguridad como rate limiting, bloqueo de cuentas tras intentos fallidos, headers HTTP de proteccion, y hashing de contrasenas con scrypt. La arquitectura propuesta consta de un servidor backend construido en Node.js con base de datos SQLite, un frontend tipo SPA (Single Page Application) desarrollado en HTML, CSS y JavaScript vanilla, y una implementacion alternativa utilizando Django REST Framework con PostgreSQL, orquestadas mediante Docker Compose. Los resultados obtenidos demuestran que la implementacion de MFA reduce significativamente el riesgo de acceso no autorizado, al requerir la verificacion de al menos dos factores de autenticacion para completar el inicio de sesion.}
+
+\vspace{1cm}
+\begin{center}
+{\small\textbf{Palabras clave:} autenticacion multifactor, MFA, TOTP, JWT, ciberseguridad}
+\end{center}
+
+% ─── Contenido ────────────────────────────────────────────
+\newpage
+\setcounter{page}{1}
+
+% ══════════════════════════════════════════════════════════
+\section{Introduccion}
+
+En el panorama actual de ciberseguridad, las amenazas digitales han evolucionado a una velocidad sin precedentes. Los ataques de fuerza bruta, phishing, credential stuffing y el robo de credenciales representan riesgos constantes para cualquier aplicacion web que maneje informacion sensible. Segun estudios de seguridad recientes, el compromiso de credenciales de usuario sigue siendo la causa principal de brechas de seguridad a nivel mundial.
+
+La autenticacion tradicional basada exclusivamente en contrasenas presenta limitaciones fundamentales: los usuarios reutilizan contrasenas, las eligen debiles, y son vulnerables a keyloggers y ataques de ingenieria social. Ante esta realidad, la Autenticacion Multifactor (MFA) se establece como una capa de seguridad adicional que requiere la verificacion de dos o mas factores independientes antes de conceder acceso.
+
+El presente proyecto consiste en el diseno e implementacion de un Sistema de Autenticacion Multifactor completo, funcional y desplegable, que integra multiples metodos de verificacion para proteger el acceso de usuarios a una aplicacion web. El sistema permite a los usuarios registrar cuentas, iniciar sesion de forma segura, configurar diferentes metodos de autenticacion, y gestionar su perfil y configuracion de seguridad.
+
+% ══════════════════════════════════════════════════════════
+\section{Problema Identificado y Justificacion del Uso de MFA}
+
+\subsection{Planteamiento del Problema}
+
+Las aplicaciones web actuales enfrentan multiples amenazas de seguridad que comprometen la confidencialidad, integridad y disponibilidad de la informacion de sus usuarios:
+
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item \textbf{Ataques de fuerza bruta:} Los atacantes prueban automaticamente miles de combinaciones de usuario y contrasena hasta encontrar las credenciales correctas.
+    \item \textbf{Credential stuffing:} Utilizacion masiva de credenciales filtradas en brechas anteriores para comprometer cuentas en otros servicios.
+    \item \textbf{Phishing e ingenieria social:} Manipulacion del usuario para que revele sus credenciales voluntariamente.
+    \item \textbf{Keyloggers y malware:} Software malicioso que captura las credenciales directamente del dispositivo del usuario.
+    \item \textbf{Reutilizacion de contrasenas:} Los usuarios utilizan la misma contrasena en multiples servicios, ampliando el impacto de una brecha.
+\end{enumerate}
+
+\subsection{Justificacion del Uso de MFA}
+
+La implementacion de Autenticacion Multifactor aborda estas vulnerabilidades al agregar capas adicionales de verificacion que, independientemente de la contrasena, dificultan significativamente el acceso no autorizado:
+
+\begin{itemize}[leftmargin=*, itemsep=3pt]
+    \item Aunque la contrasena sea comprometida, el atacante todavia necesita el segundo factor (codigo TOTP, SMS, WhatsApp o email), lo cual es significativamente mas dificil de obtener.
+    \item Los codigos de un solo uso (OTP) expiran en segundos o minutos, haciendo inutil cualquier intercepcion pasada.
+    \item Requiere que el usuario posea fisicamente un dispositivo que es independiente del canal de ataque.
+    \item Multiples estandares de seguridad (NIST, ISO 27001, PCI DSS) recomiendan o exigen MFA para sistemas que manejan datos sensibles.
+\end{itemize}
+
+\subsection{Objetivos}
+
+\subsubsection{Objetivo General}
+
+Disenar e implementar un Sistema de Autenticacion Multifactor que utilice multiples metodos de verificacion (TOTP, WhatsApp, email) para mejorar la seguridad en el acceso a aplicaciones web, demostrando la viabilidad y efectividad de esta tecnologia en un entorno practico.
+
+\subsubsection{Objetivos Especificos}
+
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item Implementar un servidor backend con manejo seguro de autenticacion utilizando JWT (JSON Web Tokens) y hashing de contrasenas con scrypt.
+    \item Desarrollar la funcion TOTP (Time-based One-Time Password) segun el estandar RFC 6238, compatible con aplicaciones autenticadoras como Google Authenticator y Authy.
+    \item Integrar el envio de codigos de verificacion por WhatsApp mediante TextMeBot API y por correo electronico mediante SMTP.
+    \item Implementar mecanismos de proteccion como rate limiting, bloqueo de cuentas tras intentos fallidos, y headers HTTP de seguridad.
+    \item Disenar un frontend intuitivo tipo SPA que permita a los usuarios gestionar su autenticacion y configuracion de seguridad.
+    \item Documentar los algoritmos criptograficos utilizados y evaluar la efectividad del sistema frente a los vectores de ataque identificados.
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════
+\section{Diagrama de Arquitectura Propuesta}
+
+\subsection{Arquitectura General del Sistema}
+
+La arquitectura del sistema se compone de tres capas principales: el frontend (interfaz de usuario), el backend (logica de negocio y autenticacion), y la capa de persistencia (base de datos). A continuacion se presenta el diagrama de componentes y flujos de datos:
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    comp/.style={rectangle, rounded corners=6pt, minimum width=2.5cm, minimum height=1cm, text centered, font=\small, line width=0.8pt},
+    arrow/.style={-{Stealth[length=2.5mm]}, thick, primary},
+    dasharrow/.style={-{Stealth[length=2.5mm]}, thick, txgray, dashed}
+]
+
+\node[comp, draw=txgray, fill=txgray!5] (fe) {Frontend SPA};
+\node[comp, draw=primary, fill=primary!5, right=2.5cm of fe] (be) {Backend Node.js};
+\node[comp, draw=success, fill=success!5, right=2.5cm of be] (db) {SQLite};
+\node[comp, draw=warning, fill=warning!5, above right=1cm and 0.5cm of be] (smtp) {SMTP Server};
+\node[comp, draw=warning, fill=warning!5, below right=1cm and 0.5cm of be] (wa) {TextMeBot API};
+
+\draw[arrow] (fe) -- node[above, font=\scriptsize] {HTTP/REST} (be);
+\draw[arrow] (be) -- node[above, font=\scriptsize] {WAL mode} (db);
+\draw[dasharrow] (be) -- node[above, font=\scriptsize] {SMTP} (smtp);
+\draw[dasharrow] (be) -- node[below, font=\scriptsize] {HTTPS} (wa);
+
+\end{tikzpicture}
+}
+\caption{Arquitectura de componentes del sistema MFA}
+\end{figure}
+
+\subsection{Flujo de Autenticacion}
+
+El siguiente diagrama describe el flujo completo de autenticacion, desde el inicio de sesion hasta el acceso al dashboard del usuario:
+
+\begin{figure}[H]
+\centering
+\resizebox{0.75\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    step/.style={rectangle, rounded corners=4pt, minimum width=2.5cm, minimum height=0.7cm, text centered, font=\scriptsize, line width=0.6pt},
+    decision/.style={diamond, aspect=2.2, minimum width=2cm, text centered, font=\scriptsize, line width=0.6pt},
+    arrow/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[step, draw=primary, fill=primary!5] (s1) {Usuario ingresa};
+\node[step, draw=primary, fill=primary!5, below=of s1] (s2) {Envia credenciales};
+\node[step, draw=success, fill=success!5, below=of s2] (s3) {Verifica password};
+\node[decision, draw=warning, fill=warning!5, below=of s3] (d1) {Validas?};
+\node[step, draw=danger, fill=danger!5, right=1.8cm of d1] (s4) {Error 401};
+\node[step, draw=primary, fill=primary!5, below=of d1] (s5) {MFA habilitado?};
+\node[step, draw=accent, fill=accent!10, left=1.8cm of s5] (s6) {Genera JWT};
+\node[step, draw=warning, fill=warning!10, below=of s5] (s7) {Muestra metodos MFA};
+\node[step, draw=accent, fill=accent!10, below=of s7] (s8) {Verifica TOTP/OTP};
+\node[step, draw=success, fill=success!10, below=of s8] (s9) {Genera JWT};
+
+\draw[arrow, primary] (s1) -- (s2);
+\draw[arrow, primary] (s2) -- (s3);
+\draw[arrow, primary] (s3) -- (d1);
+\draw[arrow, danger] (d1) -- node[above, font=\tiny] {No} (s4);
+\draw[arrow, success] (d1) -- node[right, font=\tiny] {Si} (s5);
+\draw[arrow, success] (s5) -- node[left, font=\tiny] {No} (s6);
+\draw[arrow, warning] (s5) -- node[right, font=\tiny] {Si} (s7);
+\draw[arrow, warning] (s7) -- (s8);
+\draw[arrow, success] (s8) -- (s9);
+
+\end{tikzpicture}
+}
+\caption{Flujo de autenticacion del sistema}
+\end{figure}
+
+\subsection{Flujo de Datos en el Sistema}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    participant/.style={rectangle, rounded corners=4pt, minimum width=1.8cm, minimum height=0.6cm, text centered, font=\scriptsize, line width=0.6pt},
+    msg/.style={-{Stealth[length=2mm]}, thick}
+]
+
+\node[participant, draw=primary, fill=primary!10] (user) {Usuario};
+\node[participant, draw=warning, fill=warning!10, right=3cm of user] (fe) {Frontend};
+\node[participant, draw=success, fill=success!10, right=3cm of fe] (api) {API Server};
+\node[participant, draw=danger, fill=danger!10, right=3cm of api] (db) {SQLite};
+
+\draw[msg] (user) -- node[above, font=\tiny] {1. email + password} (fe);
+\draw[msg] (fe) -- node[above, font=\tiny] {2. POST /api/login/} (api);
+\draw[msg] (api) -- node[above, font=\tiny] {3. SELECT + verify} (db);
+\draw[msg, dashed] (db) -- node[below, font=\tiny] {4. user data} (api);
+\draw[msg, dashed] (api) -- node[below, font=\tiny] {5. JWT token} (fe);
+\draw[msg, dashed] (fe) -- node[below, font=\tiny] {6. Dashboard} (user);
+
+\end{tikzpicture}
+}
+\caption{Secuencia de comunicacion en el flujo de login}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════
+\section{Herramientas Tecnologicas Seleccionadas}
+
+\subsection{Resumen del Stack Tecnologico}
+
+\begin{table}[H]
+\centering
+\caption{Stack tecnologico del proyecto}
+\begin{tabular}{@{}p{2.5cm}p{4cm}p{5.5cm}@{}}
+\toprule
+\textbf{Capa} & \textbf{Tecnologia} & \textbf{Justificacion} \\
+\midrule
+Servidor & Node.js (http nativo) & Alto rendimiento, ecosistema npm \\
+Base de datos & SQLite (better-sqlite3) & Portable, WAL mode para concurrencia \\
+JWT & HMAC-SHA256 (manual) & Control total del algoritmo \\
+Contrasenas & scrypt (crypto) & Resistente a ataques de hardware \\
+TOTP & RFC 6238, HMAC-SHA1 & Estandar internacional \\
+Email & Nodemailer (SMTP) & Facil configuracion \\
+WhatsApp & TextMeBot API & API REST sencilla \\
+QR Codes & Paquete qrcode & Generacion de codigos QR \\
+Frontend & HTML + CSS + JS vanilla & Sin dependencias \\
+Despliegue & Docker Compose & Portabilidad y escalabilidad \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Algoritmos Criptograficos Implementados}
+
+\subsubsection{scrypt para Hashing de Contrasenas}
+
+scrypt es una funcion de derivacion de clave disenada para ser intensiva en memoria, lo que dificulta la implementacion de hardware especializado para ataques. La formula de consumo de memoria es:
+
+\begin{equation}
+\text{Memoria} = 128 \cdot N \cdot r \text{ bytes}
+\end{equation}
+
+Donde $N$ es el costo de CPU, $r$ es el tamano de bloque, y $p$ es el factor de paralelizacion.
+
+\subsubsection{JWT (JSON Web Tokens)}
+
+Los tokens JWT se componen de tres partes: header, payload, y firma. La estructura matematica es:
+
+\begin{equation}
+\text{JWT} = \text{Base64URL}(\text{Header}) \ . \ \text{Base64URL}(\text{Payload}) \ . \ \text{HMAC-SHA256}(H.P, K)
+\end{equation}
+
+\subsubsection{TOTP (RFC 6238)}
+
+El codigo TOTP se calcula como:
+
+\begin{equation}
+\text{TOTP}(K, T) = \text{HOTP}(K, \lfloor (T - T_0) / X \rfloor)
+\end{equation}
+
+Donde $K$ es el secreto, $T$ es el timestamp actual, $T_0$ es la epoca de inicio, y $X$ es el periodo (30 segundos).
+
+% ══════════════════════════════════════════════════════════
+\section{Evaluacion de Resultados}
+
+\subsection{Como MFA Mejora la Seguridad}
+
+La implementacion del Sistema de Autenticacion Multifactor proporciona mejoras significativas en la seguridad del sistema:
+
+\begin{table}[H]
+\centering
+\caption{Comparacion de seguridad: sin MFA vs con MFA}
+\begin{tabular}{@{}p{3cm}p{4.5cm}p{4.5cm}@{}}
+\toprule
+\textbf{Vector de ataque} & \textbf{Sin MFA} & \textbf{Con MFA} \\
+\midrule
+Fuerza bruta & Vulnerable & Protegido \\
+Credential stuffing & Vulnerable & Mitigado \\
+Phishing & Vulnerable & Parcialmente protegido \\
+Keylogger & Vulnerable & Parcialmente protegido \\
+Replay attack & Vulnerable & Protegido \\
+Robo de base datos & Vulnerable & Protegido \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Mecanismos de Proteccion Implementados}
+
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item \textbf{Rate limiting:} Control de frecuencia de solicitudes por IP (10 intentos/min en login, 5/min en envio de OTP).
+    \item \textbf{Account lockout:} Bloqueo automatico de la cuenta tras 3 intentos fallidos consecutivos, con desbloqueo despues de 15 minutos.
+    \item \textbf{Headers de seguridad:} X-Frame-Options, X-Content-Type-Options, CSP, HSTS y X-XSS-Protection.
+    \item \textbf{Tokens temporales:} Los tokens de verificacion MFA expiran en 5 minutos, limitando la ventana de ataque.
+    \item \textbf{OTP single-use:} Los codigos de verificacion se eliminan inmediatamente despues de su uso exitoso.
+    \item \textbf{Timing-safe comparison:} Utilizacion de crypto.timingSafeEqual para prevenir ataques de canal lateral.
+\end{enumerate}
+
+\subsection{Limitaciones Identificadas}
+
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item \textbf{HTTP sin cifrado:} El sistema actualmente opera sobre HTTP plano. En produccion es imperativo implementar HTTPS con certificados TLS/SSL.
+    \item \textbf{Sin refresh tokens:} El token de acceso expira en 1 hora, requiriendo un nuevo inicio de sesion completo.
+    \item \textbf{OTP en respuesta JSON:} En modo desarrollo, el codigo OTP se retorna en la respuesta HTTP. Esto debe deshabilitarse en produccion.
+    \item \textbf{Sin revocacion de tokens:} No se implementa un mecanismo de blacklist para revocar tokens individualmente antes de su expiracion.
+    \item \textbf{CORS permisivo:} Se permite el acceso desde cualquier origen. En produccion debe restringirse a dominios especificos.
+    \item \textbf{Contrasenas minimas:} Se requieren solo 6 caracteres sin exigir complejidad adicional.
+\end{enumerate}
+
+\subsection{Mejoras Propuestas}
+
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item Implementar HTTPS con certificados Let's Encrypt para cifrar toda la comunicacion.
+    \item Agregar refresh tokens con rotacion para mantener sesiones activas de forma segura.
+    \item Implementar JWT ID (jti) con blacklist en Redis para revocar tokens comprometidos.
+    \item Exigir politicas de contrasenas mas estrictas: minimo 8 caracteres, mayusculas, numeros y simbolos.
+    \item Integrar verificacion HaveIBeenPwned para detectar contrasenas comprometidas en brechas conocidas.
+    \item Implementar bloqueo permanente por IP despues de multiples violaciones de rate limiting.
+    \item Agregar logging centralizado y monitoreo de anomalias de seguridad.
+    \item Implementar 2FA con backup codes para recuperacion de acceso.
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════
+\section{Conclusiones Generales del Grupo}
+
+\subsection{Conclusiones Tecnicas}
+
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item \textbf{Viabilidad de implementacion:} El proyecto demostro que es posible construir un sistema de autenticacion multifactor completo y funcional utilizando tecnologias de codigo abierto y APIs publicas, sin requerir infraestructura costosa.
+    \item \textbf{Efectividad de MFA:} La implementacion de multiples metodos de verificacion (TOTP, WhatsApp, email) proporciona capas de seguridad adicionales que dificultan significativamente el acceso no autorizado, incluso en escenarios donde la contrasena del usuario ha sido comprometida.
+    \item \textbf{Importancia del hashing:} El uso de scrypt con salt unico por usuario garantiza que, incluso en caso de robo de la base de datos, los hashes de contrasenas no sean facilmente reversibles mediante ataques de fuerza bruta o rainbow tables.
+    \item \textbf{Rate limiting efectivo:} La implementacion de control de frecuencia por IP y bloqueo de cuentas tras intentos fallidos reduce significativamente la viabilidad de ataques de fuerza bruta.
+    \item \textbf{Arquitectura modular:} El diseno modular del sistema permite facilmente agregar nuevos metodos de autenticacion o integrar con servicios externos sin modificar la logica central.
+\end{enumerate}
+
+\subsection{Conclusiones Academicas}
+
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item \textbf{Aprendizaje integral:} El proyecto permitio aplicar conocimientos de ciberseguridad, criptografia, desarrollo web y arquitectura de software en un caso de uso real y relevante.
+    \item \textbf{Comprension de algoritmos:} La implementacion manual de JWT, TOTP y scrypt proporciono una comprension profunda del funcionamiento interno de estos algoritmos, y no solo su uso como caja negra.
+    \item \textbf{Importancia de la seguridad:} El ejercicio de analizar vulnerabilidades y proponer mitigaciones reforzo la importancia de adoptar un enfoque de seguridad by design en el desarrollo de software.
+    \item \textbf{Trabajo en equipo:} La colaboracion entre los integrantes del grupo permitio abordar las multiples dimensiones del proyecto (backend, frontend, seguridad, documentacion) de forma eficiente.
+\end{enumerate}
+
+\subsection{Reflexion Final}
+
+Este proyecto demuestra que la ciberseguridad no es un lujo sino una necesidad en el diseno de cualquier sistema que maneje informacion de usuarios. La implementacion de MFA, lejos de ser una complejidad innecesaria, representa una inversion fundamental en la proteccion de datos y la confianza del usuario. El conocimiento adquirido durante el desarrollo de este sistema sienta las bases para futuros proyectos orientados a construir aplicaciones mas seguras y resilientes ante las amenazas digitales actuales.
+
+% ══════════════════════════════════════════════════════════
+\newpage
+\section{Referencias}
+
+\begin{enumerate}[label={[\arabic*]}, leftmargin=*, itemsep=3pt]
+    \item Percival, C. (2009). Stronger key derivation via sequential memory-hard functions. BSDCan.
+    \item RFC 4226 - HOTP: An HMAC-based one-time password algorithm. Internet Engineering Task Force.
+    \item RFC 6238 - TOTP: Time-based one-time password algorithm. Internet Engineering Task Force.
+    \item RFC 7519 - JSON Web Token (JWT). Internet Engineering Task Force.
+    \item RFC 7914 - The scrypt password-based key derivation function. Internet Engineering Task Force.
+    \item National Institute of Standards and Technology. (2020). Digital identity guidelines (SP 800-63B).
+    \item OWASP Foundation. (2023). Multi-factor authentication. OWASP Authentication Cheat Sheet.
+    \item better-sqlite3 documentation. (2024). GitHub. https://github.com/WiseLibs/better-sqlite3
+    \item Node.js crypto documentation. (2024). https://nodejs.org/api/crypto.html
+    \item TextMeBot API documentation. (2024). https://api.textmebot.com
+\end{enumerate}
+
+\end{document}
