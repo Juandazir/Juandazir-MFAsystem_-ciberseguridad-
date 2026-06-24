@@ -248,12 +248,6 @@ body {
 
       <div id="mfaCodeSection" style="display:none;">
         <div id="mfaSendSection" style="display:none;">
-          <div id="mfaCarrierSelector" style="display:none;margin-bottom:8px;">
-            <select id="mfaCarrierSelect" style="width:100%;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;">
-              <option value="">Selecciona tu operador móvil (para SMS real)</option>
-            </select>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">El SMS se envía vía email-to-SMS gateway según tu operador</div>
-          </div>
           <button class="btn btn-primary btn-block" id="mfaSendCodeBtn" onclick="handleMfaSendCode()">Enviar Código</button>
           <div style="text-align:center;margin:8px 0;color:var(--text-muted);font-size:11px;" id="mfaSentInfo"></div>
         </div>
@@ -337,19 +331,6 @@ body {
         </div>
       </div>
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
-        <div class="link" onclick="toggleTwilioConfig()" style="display:flex;align-items:center;gap:6px;font-size:13px;">💬 Configurar Twilio SMS/WhatsApp <span id="twilioCfgIndicator" style="font-size:11px;"></span></div>
-        <div id="twilioConfigSection" style="display:none;margin-top:8px;">
-          <div class="form-group"><label>Account SID</label><input type="text" id="twilioAccountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
-          <div class="form-group"><label>Auth Token</label><input type="password" id="twilioAuthToken" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"><div class="hint">Consíguelos en <span class="link" onclick="window.open('https://console.twilio.com','_blank')">Twilio Console</span></div></div>
-          <div class="form-group"><label>Número SMS (Twilio)</label><input type="text" id="twilioFromNumber" placeholder="+1234567890"><div class="hint">Número comprado en Twilio con capacidad SMS</div></div>
-          <div class="form-group"><label>Número WhatsApp (Twilio Sandbox o aprobado)</label><input type="text" id="twilioWhatsappFrom" placeholder="+14155238886"><div class="hint">Sandbox: +14155238886. Actívalo en Twilio Console → Messaging → Try it out → Send a WhatsApp message</div></div>
-          <div class="actions-row">
-            <button class="btn btn-primary btn-sm" onclick="saveTwilioConfig()">Guardar y Probar</button>
-            <span id="twilioTestResult" style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;"></span>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
         <div class="link" onclick="toggleTextMeBotConfig()" style="display:flex;align-items:center;gap:6px;font-size:13px;">🤖 Configurar TextMeBot WhatsApp <span id="tmbCfgIndicator" style="font-size:11px;"></span></div>
         <div id="textmebotConfigSection" style="display:none;margin-top:8px;">
           <div class="form-group"><label>API Key de TextMeBot</label><input type="password" id="tmbApikey" placeholder="123456"><div class="hint">Obtén tu API Key en <span class="link" onclick="window.open('https://textmebot.com/','_blank')">textmebot.com</span>. Tiene demo gratuita de 2 días, luego $1/mes para uso personal. No requiere que el usuario envíe un mensaje primero.</div></div>
@@ -428,13 +409,7 @@ body {
       <label>Teléfono</label>
       <div style="display:flex;gap:8px;">
         <input type="tel" id="editPhone" placeholder="+573001234567" style="flex:1;">
-        <button class="btn btn-outline btn-sm" id="editPhoneVerifyBtn" onclick="handleSendSmsOtp()">Verificar</button>
-      </div>
-      <div id="editPhoneCarrierSection" style="margin-top:6px;">
-        <select id="editPhoneCarrier" style="width:100%;padding:6px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:11px;">
-          <option value="">Selecciona tu operador (para SMS real)</option>
-        </select>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">El SMS se envía vía email-to-SMS gateway. Los códigos también se muestran en pantalla.</div>
+        <button class="btn btn-outline btn-sm" id="editPhoneVerifyBtn" onclick="handleSendWhatsAppOtp()">Verificar</button>
       </div>
       <div id="editPhoneOtpSection" style="display:none;margin-top:8px;">
         <div style="display:flex;gap:8px;">
@@ -634,7 +609,7 @@ function initMfaVerify(methods) {
   }
 
   methods.forEach((m, idx) => {
-    const icons = { totp: '🔐', sms: '📱', whatsapp: '💬', email: '📧' };
+    const icons = { totp: '🔐', whatsapp: '💬', email: '📧' };
     const div = document.createElement('div');
     div.className = 'mfa-option' + (idx === 0 ? ' selected' : '');
     div.dataset.method = m.method;
@@ -645,26 +620,16 @@ function initMfaVerify(methods) {
       state.selectedMfaMethod = m.method;
       document.getElementById('mfaOtpInput').value = '';
       document.getElementById('mfaSentInfo').textContent = '';
-      sendSection.style.display = (m.method === 'sms' || m.method === 'whatsapp' || m.method === 'email') ? 'block' : 'none';
+      sendSection.style.display = (m.method === 'whatsapp' || m.method === 'email') ? 'block' : 'none';
       document.getElementById('mfaOtpTimer').style.display = (m.method === 'totp') ? 'block' : 'none';
-      const carrierSel = document.getElementById('mfaCarrierSelector');
-      if (carrierSel) {
-        carrierSel.style.display = (m.method === 'sms') ? 'block' : 'none';
-        if (m.method === 'sms') loadSmsCarriers('mfaCarrierSelect');
-      }
     };
     selector.appendChild(div);
   });
 
   state.selectedMfaMethod = methods[0].method;
   codeSection.style.display = 'block';
-  sendSection.style.display = (methods[0].method === 'sms' || methods[0].method === 'whatsapp' || methods[0].method === 'email') ? 'block' : 'none';
+  sendSection.style.display = (methods[0].method === 'whatsapp' || methods[0].method === 'email') ? 'block' : 'none';
   document.getElementById('mfaOtpTimer').style.display = (methods[0].method === 'totp') ? 'block' : 'none';
-  const carrierSel = document.getElementById('mfaCarrierSelector');
-  if (carrierSel) {
-    carrierSel.style.display = (methods[0].method === 'sms') ? 'block' : 'none';
-    if (methods[0].method === 'sms') loadSmsCarriers('mfaCarrierSelect');
-  }
 
   if (methods[0].method === 'totp') {
     startTotpCountdown();
@@ -696,7 +661,7 @@ async function handleMfaSendCode() {
   // Use temp_token during MFA verify (user not fully logged in yet)
   const authToken = state.tempToken || state.token || false;
 
-  if (method === 'sms' || method === 'whatsapp') {
+  if (method === 'whatsapp') {
     // During MFA verify, state.profile may not be loaded yet
     if (state.profile && state.profile.phone) {
       destination = state.profile.phone;
@@ -716,19 +681,15 @@ async function handleMfaSendCode() {
       btn.disabled = false; btn.textContent = 'Enviar Código';
       return;
     }
-    if (method === 'sms') {
-      const carrierSelect = document.getElementById('mfaCarrierSelect');
-      if (carrierSelect) body.carrierId = carrierSelect.value;
-    }
   }
   body.destination = destination;
-  body.type = method; // 'sms' or 'whatsapp' or 'email'
+  body.type = method; // 'whatsapp' or 'email'
 
   const { ok, data } = await api('POST', '/api/accounts/send-otp/', body, authToken);
   btn.disabled = false; btn.textContent = 'Enviar Código';
   if (ok) {
     document.getElementById('mfaSentInfo').textContent = `Código enviado a ${destination}`;
-    if (data.code) toast(`${method === 'sms' ? '📱' : method === 'whatsapp' ? '💬' : '📧'} Código: ${data.code}`, 'info', 12000);
+    if (data.code) toast(`${method === 'whatsapp' ? '💬' : '📧'} Código: ${data.code}`, 'info', 12000);
     document.getElementById('mfaOtpInput').focus();
   } else {
     toast(data.error || 'Error al enviar código', 'error');
@@ -779,7 +740,7 @@ async function loadDashboard() {
   document.getElementById('profPhoneVerified').className = data.phone_verified ? 'badge badge-success' : 'badge badge-warning';
   document.getElementById('profCreated').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('es-CL') : '-';
 
-  const mfaEnabled = data.mfa_totp_enabled || data.mfa_sms_enabled || data.mfa_email_enabled || data.mfa_whatsapp_enabled;
+  const mfaEnabled = data.mfa_totp_enabled || data.mfa_email_enabled || data.mfa_whatsapp_enabled;
   const badge = document.getElementById('dashMfaBadge');
   if (mfaEnabled) { badge.textContent = '✓ MFA Activo'; badge.className = 'badge badge-success'; }
   else { badge.textContent = '⚠ MFA Inactivo'; badge.className = 'badge badge-warning'; }
@@ -796,7 +757,6 @@ function renderMfaMethods(user) {
   const list = document.getElementById('mfaMethodsList');
   const methods = [
     { key: 'totp', enabled: user.mfa_totp_enabled, icon: '🔐', name: 'App Autenticadora (TOTP)', desc: 'Google Authenticator, Authy, etc.' },
-    { key: 'sms', enabled: user.mfa_sms_enabled, icon: '📱', name: 'Código por SMS', desc: user.phone_verified ? `Teléfono: ${user.phone}` : 'Requiere verificar teléfono' },
     { key: 'whatsapp', enabled: user.mfa_whatsapp_enabled, icon: '💬', name: 'Código por WhatsApp', desc: user.phone_verified ? `WhatsApp: ${user.phone}` : 'Requiere verificar teléfono' },
     { key: 'email', enabled: user.mfa_email_enabled, icon: '📧', name: 'Código por Email', desc: user.email_verified ? `Email: ${user.email}` : 'Requiere verificar email' },
   ];
@@ -805,9 +765,9 @@ function renderMfaMethods(user) {
   methods.forEach(m => {
     const div = document.createElement('div');
     div.className = 'mfa-method';
-    const isMobile = user.phone_verified && (m.key === 'sms' || m.key === 'whatsapp');
+    const isMobile = user.phone_verified && m.key === 'whatsapp';
     const isEmailOk = user.email_verified && m.key === 'email';
-    const canEnable = m.key === 'totp' || ((m.key === 'sms' || m.key === 'whatsapp') && user.phone_verified) || (m.key === 'email' && user.email_verified);
+    const canEnable = m.key === 'totp' || (m.key === 'whatsapp' && user.phone_verified) || (m.key === 'email' && user.email_verified);
     div.innerHTML = `
       <div class="left">
         <div class="icon">${m.icon}</div>
@@ -833,14 +793,13 @@ function showMfaDetail(method, user) {
 
   const configs = {
     totp: { icon: '🔐', name: 'App Autenticadora (TOTP)' },
-    sms: { icon: '📱', name: 'Código por SMS' },
     whatsapp: { icon: '💬', name: 'Código por WhatsApp' },
     email: { icon: '📧', name: 'Código por Email' },
   };
   const cfg = configs[method];
   title.textContent = `${cfg.icon} ${cfg.name}`;
 
-  const isEnabled = method === 'totp' ? user.mfa_totp_enabled : method === 'sms' ? user.mfa_sms_enabled : method === 'whatsapp' ? user.mfa_whatsapp_enabled : user.mfa_email_enabled;
+  const isEnabled = method === 'totp' ? user.mfa_totp_enabled : method === 'whatsapp' ? user.mfa_whatsapp_enabled : user.mfa_email_enabled;
 
   let html = '';
   if (method === 'totp') {
@@ -858,30 +817,6 @@ function showMfaDetail(method, user) {
         <button class="btn btn-primary btn-block" onclick="closeModal('modalMfaDetail'); initTotpSetup();">Configurar TOTP</button>
       `}
     `;
-  } else if (method === 'sms') {
-    if (!user.phone_verified) {
-      html = `
-        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
-          Primero verifica un número de teléfono en tu perfil.
-        </p>
-        <button class="btn btn-primary btn-block" onclick="closeModal('modalMfaDetail'); showEditProfile();">Ir a Editar Perfil</button>
-      `;
-    } else {
-      html = `
-        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
-          Recibirás un código SMS en ${user.phone} para iniciar sesión.
-        </p>
-        ${isEnabled ? `
-          <div style="text-align:center;padding:20px;">
-            <div style="font-size:48px;margin-bottom:12px;">✅</div>
-            <p style="color:var(--success);font-weight:600;">SMS MFA está activo</p>
-            <button class="btn btn-danger btn-block btn-sm" style="margin-top:16px;" onclick="handleMfaToggle('sms', false)">Desactivar SMS MFA</button>
-          </div>
-        ` : `
-          <button class="btn btn-success btn-block" onclick="handleMfaToggle('sms', true)">Activar SMS MFA</button>
-        `}
-      `;
-    }
   } else if (method === 'whatsapp') {
     if (!user.phone_verified) {
       html = `
@@ -894,7 +829,6 @@ function showMfaDetail(method, user) {
       html = `
         <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
           Recibirás un código por WhatsApp en ${user.phone} para iniciar sesión.
-          ${isEnabled ? 'Necesitas tener Twilio WhatsApp configurado (admin).' : ''}
         </p>
         ${isEnabled ? `
           <div style="text-align:center;padding:20px;">
@@ -992,25 +926,6 @@ async function handleTotpDisable() {
   await handleMfaToggle('totp', false);
 }
 
-// ─── SMS Carriers ───────────────────────────────────────────
-let smsCarriers = [];
-async function loadSmsCarriers(selectId) {
-  const select = document.getElementById(selectId);
-  if (!select) return;
-  // Only reload if empty or forced
-  if (select.options.length > 1 && smsCarriers.length > 0) return;
-  const { ok, data } = await api('GET', '/api/sms/carriers/', null, state.token ? true : false);
-  if (!ok || !data.carriers) return;
-  smsCarriers = data.carriers;
-  select.innerHTML = '<option value="">Selecciona tu operador móvil (opcional)</option>';
-  data.carriers.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.id;
-    opt.textContent = c.name + (c.gateway ? ` (${c.gateway})` : '');
-    select.appendChild(opt);
-  });
-}
-
 // ─── Edit Profile ──────────────────────────────────────────
 function showEditProfile() {
   const p = state.profile;
@@ -1022,7 +937,6 @@ function showEditProfile() {
   document.getElementById('editEmailOtp').value = '';
   document.getElementById('editPhoneOtp').value = '';
   showModal('modalEditProfile');
-  loadSmsCarriers('editPhoneCarrier');
 }
 
 async function handleSaveProfile() {
@@ -1073,16 +987,14 @@ async function handleVerifyEmailOtp() {
   }
 }
 
-async function handleSendSmsOtp() {
+async function handleSendWhatsAppOtp() {
   const phone = document.getElementById('editPhone').value.trim();
   if (!/^\+?[\d\s\-()]{7,20}$/.test(phone)) return toast('Número inválido. Usa formato +573001234567', 'error');
 
   const btn = document.getElementById('editPhoneVerifyBtn');
   btn.disabled = true; btn.textContent = '...';
 
-  const carrierSelect = document.getElementById('editPhoneCarrier');
-  const body = { destination: phone, type: 'sms' };
-  if (carrierSelect && carrierSelect.value) body.carrierId = carrierSelect.value;
+  const body = { destination: phone, type: 'whatsapp' };
 
   const { ok, data } = await api('POST', '/api/accounts/send-otp/', body, true);
   btn.disabled = false; btn.textContent = 'Verificar';
@@ -1101,7 +1013,7 @@ async function handleVerifyPhoneOtp() {
   const code = document.getElementById('editPhoneOtp').value.trim();
   if (!code || code.length < 6) return toast('Código inválido', 'error');
 
-  const { ok, data } = await api('POST', '/api/accounts/verify-otp/', { destination: phone, type: 'sms', code }, true);
+  const { ok, data } = await api('POST', '/api/accounts/verify-otp/', { destination: phone, type: 'whatsapp', code }, true);
   if (ok) {
     toast('Teléfono verificado correctamente', 'success');
     document.getElementById('editPhoneOtpSection').style.display = 'none';
@@ -1248,7 +1160,7 @@ function renderAdminUsers() {
   }
 
   list.innerHTML = users.map(u => {
-    const mfaOn = u.mfa_totp_enabled || u.mfa_sms_enabled || u.mfa_email_enabled;
+    const mfaOn = u.mfa_totp_enabled || u.mfa_email_enabled || u.mfa_whatsapp_enabled;
     const isCurrent = u.id === state.userId;
     return `
       <div class="mfa-method" style="flex-direction:column;align-items:stretch;gap:8px;${isCurrent ? 'border-color:var(--primary);' : ''}">
@@ -1365,100 +1277,6 @@ async function saveEmailConfig() {
     document.getElementById('smtpPass').value = '';
     if (data.test_ok) toast('📧 Correo SMTP configurado correctamente', 'success');
     loadEmailConfig();
-  } else {
-    resultEl.textContent = '✗ ' + (data.error || 'Error');
-    resultEl.style.color = 'var(--danger)';
-  }
-}
-
-// ─── Twilio Config ────────────────────────────────────────────
-let twilioCfgLoaded = false;
-async function toggleTwilioConfig() {
-  const section = document.getElementById('twilioConfigSection');
-  if (section.style.display === 'block') { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  if (!twilioCfgLoaded) await loadTwilioConfig();
-}
-
-async function loadTwilioConfig() {
-  const { ok, data } = await api('GET', '/api/admin/twilio-config/', null, true);
-  if (!ok) return;
-  twilioCfgLoaded = true;
-  document.getElementById('twilioAccountSid').value = data.accountSid || '';
-  document.getElementById('twilioAuthToken').value = '';
-  document.getElementById('twilioFromNumber').value = data.fromNumber || '';
-  document.getElementById('twilioWhatsappFrom').value = data.whatsappFrom || '';
-  const indicator = document.getElementById('twilioCfgIndicator');
-  if (data.accountSid && data.authToken && data.authToken !== '') {
-    indicator.textContent = '✓ Configurado';
-    indicator.style.color = 'var(--success)';
-  } else {
-    indicator.textContent = '⚠ No configurado';
-    indicator.style.color = 'var(--warning)';
-  }
-}
-
-async function saveTwilioConfig() {
-  const body = {
-    accountSid: document.getElementById('twilioAccountSid').value.trim(),
-    authToken: document.getElementById('twilioAuthToken').value,
-    fromNumber: document.getElementById('twilioFromNumber').value.trim(),
-    whatsappFrom: document.getElementById('twilioWhatsappFrom').value.trim(),
-  };
-  if (!body.accountSid) return toast('Ingresa el Account SID de Twilio', 'error');
-  if (!body.authToken) return toast('Ingresa el Auth Token de Twilio', 'error');
-
-  const resultEl = document.getElementById('twilioTestResult');
-  resultEl.innerHTML = '<span class="spinner"></span> Conectando...';
-
-  const { ok, data } = await api('PUT', '/api/admin/twilio-config/', body, true);
-  if (ok) {
-    resultEl.textContent = data.test_ok ? '✓ Twilio configurado y conectado' : '⚠ Guardado, pero no se pudo conectar con Twilio. Revisa las credenciales.';
-    resultEl.style.color = data.test_ok ? 'var(--success)' : 'var(--warning)';
-    document.getElementById('twilioAuthToken').value = '';
-    if (data.test_ok) toast('💬 Twilio configurado correctamente', 'success');
-    loadTwilioConfig();
-  } else {
-    resultEl.textContent = '✗ ' + (data.error || 'Error');
-    resultEl.style.color = 'var(--danger)';
-  }
-}
-
-let cmbCfgLoaded = false;
-
-async function toggleCallMeBotConfig() {
-  const section = document.getElementById('callmebotConfigSection');
-  section.style.display = section.style.display === 'none' ? 'block' : 'none';
-  if (!cmbCfgLoaded) await loadCallMeBotConfig();
-}
-
-async function loadCallMeBotConfig() {
-  const { ok, data } = await api('GET', '/api/admin/callmebot-config/', null, true);
-  if (!ok) return;
-  cmbCfgLoaded = true;
-  document.getElementById('cmbApikey').value = '';
-  const indicator = document.getElementById('cmbCfgIndicator');
-  if (data.apikey && data.apikey !== '') {
-    indicator.textContent = '✓ Configurado';
-    indicator.style.color = 'var(--success)';
-  } else {
-    indicator.textContent = '⚠ No configurado';
-    indicator.style.color = 'var(--warning)';
-  }
-}
-
-async function saveCallMeBotConfig() {
-  const body = { apikey: document.getElementById('cmbApikey').value.trim() };
-  if (!body.apikey) return toast('Ingresa la API Key de CallMeBot', 'error');
-  const resultEl = document.getElementById('cmbTestResult');
-  resultEl.innerHTML = '<span class="spinner"></span> Guardando...';
-  const { ok, data } = await api('PUT', '/api/admin/callmebot-config/', body, true);
-  if (ok) {
-    resultEl.textContent = '✓ Configuración guardada';
-    resultEl.style.color = 'var(--success)';
-    document.getElementById('cmbApikey').value = '';
-    toast('🤖 CallMeBot configurado correctamente', 'success');
-    loadCallMeBotConfig();
   } else {
     resultEl.textContent = '✗ ' + (data.error || 'Error');
     resultEl.style.color = 'var(--danger)';

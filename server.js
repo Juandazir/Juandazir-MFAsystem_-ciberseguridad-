@@ -4,26 +4,12 @@ const path = require('path');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
-const twilio = require('twilio');
 
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'database', 'data.json');
 const EMAIL_CONFIG_PATH = path.join(__dirname, 'database', 'email-config.json');
-const SMS_CARRIERS_CONFIG_PATH = path.join(__dirname, 'database', 'sms-carriers.json');
-const TWILIO_CONFIG_PATH = path.join(__dirname, 'database', 'twilio-config.json');
 const TEXTMEBOT_CONFIG_PATH = path.join(__dirname, 'database', 'textmebot-config.json');
 
-// Carriers de Colombia con sus gateways email->SMS
-const DEFAULT_SMS_CARRIERS = [
-  { id: 'claro',       name: 'Claro Colombia',        gateway: 'iclaro.com.co' },
-  { id: 'claro2',      name: 'Claro Colombia (alt)',   gateway: 'clarocolombia.com.co' },
-  { id: 'movistar',    name: 'Movistar Colombia',      gateway: 'movistar.com.co' },
-  { id: 'tigo',        name: 'Tigo Colombia',          gateway: 'sms.tigo.com.co' },
-  { id: 'wom',         name: 'WOM Colombia',           gateway: 'wom.co' },
-  { id: 'etb',         name: 'ETB Colombia',           gateway: 'etb.net.co' },
-  { id: 'virgin',      name: 'Virgin Mobile Colombia',  gateway: 'movistar.com.co' },
-  { id: 'other',       name: 'Otro (solo consola)',     gateway: '' },
-];
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const JWT_EXPIRY = 3600 * 1000;
 const LOCKOUT_THRESHOLD = 3;
@@ -194,7 +180,6 @@ class DatabaseManager {
         email_verified  INTEGER NOT NULL DEFAULT 0,
         mfa_totp_enabled  INTEGER NOT NULL DEFAULT 0,
         mfa_totp_secret   TEXT    NOT NULL DEFAULT '',
-        mfa_sms_enabled   INTEGER NOT NULL DEFAULT 0,
         mfa_email_enabled INTEGER NOT NULL DEFAULT 0,
         failed_attempts   INTEGER NOT NULL DEFAULT 0,
         is_locked         INTEGER NOT NULL DEFAULT 0,
@@ -215,9 +200,9 @@ class DatabaseManager {
       const insert = this.db.prepare(`
         INSERT OR IGNORE INTO users
           (id, email, name, password, role, phone, phone_verified, email_verified,
-           mfa_totp_enabled, mfa_totp_secret, mfa_sms_enabled, mfa_email_enabled, mfa_whatsapp_enabled,
+           mfa_totp_enabled, mfa_totp_secret, mfa_email_enabled, mfa_whatsapp_enabled,
            failed_attempts, is_locked, lockout_until, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       const tx = this.db.transaction((users) => {
         for (const u of users) {
@@ -227,7 +212,7 @@ class DatabaseManager {
             u.phone_verified ? 1 : 0, u.email_verified ? 1 : 0,
             (u.mfa_totp_enabled || u.mfa_enabled) ? 1 : 0,
             u.mfa_totp_secret || u.mfa_secret || generateTOTPSecret(),
-            u.mfa_sms_enabled ? 1 : 0, u.mfa_email_enabled ? 1 : 0,
+            u.mfa_email_enabled ? 1 : 0,
             u.mfa_whatsapp_enabled ? 1 : 0,
             u.failed_attempts || 0, u.is_locked ? 1 : 0,
             u.lockout_until || null,
@@ -252,7 +237,6 @@ class DatabaseManager {
       phone: row.phone, phone_verified: !!row.phone_verified,
       email_verified: !!row.email_verified,
       mfa_totp_enabled: !!row.mfa_totp_enabled,
-      mfa_sms_enabled: !!row.mfa_sms_enabled,
       mfa_email_enabled: !!row.mfa_email_enabled,
       mfa_whatsapp_enabled: !!row.mfa_whatsapp_enabled,
       failed_attempts: row.failed_attempts,
@@ -268,7 +252,6 @@ class DatabaseManager {
     u.phone_verified = !!u.phone_verified;
     u.email_verified = !!u.email_verified;
     u.mfa_totp_enabled = !!u.mfa_totp_enabled;
-    u.mfa_sms_enabled = !!u.mfa_sms_enabled;
     u.mfa_email_enabled = !!u.mfa_email_enabled;
     u.mfa_whatsapp_enabled = !!u.mfa_whatsapp_enabled;
     u.is_locked = !!u.is_locked;
@@ -292,7 +275,7 @@ class DatabaseManager {
       SELECT
         COUNT(*)                                              AS total,
         SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END)        AS locked,
-        SUM(CASE WHEN mfa_totp_enabled=1 OR mfa_sms_enabled=1 OR mfa_email_enabled=1 OR mfa_whatsapp_enabled=1 THEN 1 ELSE 0 END) AS mfa_enabled,
+        SUM(CASE WHEN mfa_totp_enabled=1 OR mfa_email_enabled=1 OR mfa_whatsapp_enabled=1 THEN 1 ELSE 0 END) AS mfa_enabled,
         SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END)       AS admins
       FROM users
     `).get();
@@ -315,7 +298,7 @@ class DatabaseManager {
 
   updateUser(id, updates) {
     const allowed = ['name','email','password','phone','role','phone_verified','email_verified',
-      'mfa_totp_enabled','mfa_totp_secret','mfa_sms_enabled','mfa_email_enabled','mfa_whatsapp_enabled',
+      'mfa_totp_enabled','mfa_totp_secret','mfa_email_enabled','mfa_whatsapp_enabled',
       'failed_attempts','is_locked','lockout_until'];
     const sets = [];
     const vals = [];
@@ -323,7 +306,7 @@ class DatabaseManager {
       if (key in updates) {
         let val = updates[key];
         // Convert JS booleans → SQLite INTEGER
-        if (['phone_verified','email_verified','mfa_totp_enabled','mfa_sms_enabled','mfa_whatsapp_enabled','mfa_email_enabled','is_locked'].includes(key)) {
+        if (['phone_verified','email_verified','mfa_totp_enabled','mfa_whatsapp_enabled','mfa_email_enabled','is_locked'].includes(key)) {
           val = val ? 1 : 0;
         }
         sets.push(key + ' = ?');
@@ -478,113 +461,6 @@ async function sendEmail(to, subject, text, html) {
   }
 }
 
-// ─── SMS via Email-to-SMS Gateway ─────────────────────────
-function getSmsCarriers() {
-  const carriers = [...DEFAULT_SMS_CARRIERS];
-  try {
-    if (fs.existsSync(SMS_CARRIERS_CONFIG_PATH)) {
-      const custom = JSON.parse(fs.readFileSync(SMS_CARRIERS_CONFIG_PATH, 'utf8'));
-      if (Array.isArray(custom) && custom.length) return custom;
-    }
-  } catch (e) { /* ignore */ }
-  return carriers;
-}
-
-function saveSmsCarriers(carriers) {
-  try {
-    const dir = path.dirname(SMS_CARRIERS_CONFIG_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(SMS_CARRIERS_CONFIG_PATH, JSON.stringify(carriers, null, 2));
-    return true;
-  } catch (e) { return false; }
-}
-
-async function sendSmsViaEmail(phoneNumber, carrierId, code) {
-  const carriers = getSmsCarriers();
-  const carrier = carriers.find(c => c.id === carrierId);
-  if (!carrier || !carrier.gateway) {
-    return { sent: false, reason: 'Carrier sin gateway email. El código solo se muestra en pantalla.' };
-  }
-  const smsEmail = `${phoneNumber.replace(/[^0-9]/g, '')}@${carrier.gateway}`;
-  const text = `Tu código de verificación MFA es: ${code}`;
-  const html = `<div style="font-family:sans-serif;max-width:400px;margin:0 auto;background:#1e293b;border-radius:12px;padding:32px;text-align:center;border:1px solid #334155;">
-    <div style="font-size:40px;margin-bottom:12px;">📱</div>
-    <h2 style="color:#f1f5f9;margin-bottom:16px;">Código de verificación</h2>
-    <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#a5b4fc;background:#0f172a;padding:16px 32px;border-radius:8px;font-family:monospace;margin-bottom:16px;">${code}</div>
-    <p style="color:#94a3b8;font-size:13px;">Recibiste este SMS vía email-to-SMS gateway de ${carrier.name}.</p>
-    <p style="color:#64748b;font-size:11px;">El código expira en 5 minutos.</p>
-  </div>`;
-  return await sendEmail(smsEmail, `📱 Código MFA para ${phoneNumber}`, text, html);
-}
-
-// ─── Twilio SMS / WhatsApp ─────────────────────────────────
-function getTwilioConfig() {
-  try {
-    if (fs.existsSync(TWILIO_CONFIG_PATH)) {
-      return JSON.parse(fs.readFileSync(TWILIO_CONFIG_PATH, 'utf8'));
-    }
-  } catch (e) { /* ignore */ }
-  return {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
-    authToken: process.env.TWILIO_AUTH_TOKEN || '',
-    fromNumber: process.env.TWILIO_FROM_NUMBER || '',
-    whatsappFrom: process.env.TWILIO_WHATSAPP_FROM || '',
-  };
-}
-
-function saveTwilioConfig(cfg) {
-  try {
-    const dir = path.dirname(TWILIO_CONFIG_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(TWILIO_CONFIG_PATH, JSON.stringify(cfg, null, 2));
-    log('INFO', 'Twilio config saved');
-    return true;
-  } catch (e) { log('ERROR', 'Twilio config save error', { error: e.message }); return false; }
-}
-
-function getTwilioClient() {
-  const cfg = getTwilioConfig();
-  if (!cfg.accountSid || !cfg.authToken) return null;
-  return twilio(cfg.accountSid, cfg.authToken);
-}
-
-async function sendSmsViaTwilio(phoneNumber, code) {
-  const cfg = getTwilioConfig();
-  if (!cfg.accountSid || !cfg.authToken || !cfg.fromNumber) return { sent: false, reason: 'Twilio no configurado' };
-  try {
-    const client = twilio(cfg.accountSid, cfg.authToken);
-    const msg = await client.messages.create({
-      body: `🔐 Tu código MFA es: ${code}. Válido por 5 minutos. No lo compartas.`,
-      from: cfg.fromNumber,
-      to: phoneNumber,
-    });
-    log('INFO', 'SMS sent via Twilio', { to: phoneNumber, sid: msg.sid });
-    return { sent: true, sid: msg.sid };
-  } catch (e) {
-    log('ERROR', 'Twilio SMS failed', { error: e.message });
-    return { sent: false, reason: e.message };
-  }
-}
-
-async function sendWhatsAppViaTwilio(phoneNumber, code) {
-  const cfg = getTwilioConfig();
-  if (!cfg.accountSid || !cfg.authToken || !cfg.whatsappFrom) return { sent: false, reason: 'Twilio WhatsApp no configurado' };
-  try {
-    const client = twilio(cfg.accountSid, cfg.authToken);
-    const to = `whatsapp:${phoneNumber}`;
-    const from = `whatsapp:${cfg.whatsappFrom}`;
-    const msg = await client.messages.create({
-      body: `🔐 *Tu código MFA es:* ${code}\n\nVálido por 5 minutos. No lo compartas con nadie.`,
-      from, to,
-    });
-    log('INFO', 'WhatsApp sent via Twilio', { to: phoneNumber, sid: msg.sid });
-    return { sent: true, sid: msg.sid };
-  } catch (e) {
-    log('ERROR', 'Twilio WhatsApp failed', { error: e.message });
-    return { sent: false, reason: e.message };
-  }
-}
-
 // ─── TextMeBot (WhatsApp API) ────────────────────────
 function getTextMeBotConfig() {
   try {
@@ -697,7 +573,6 @@ async function handleAPI(req, res, pathname) {
     // Check which MFA methods are enabled
     const mfaMethods = [];
     if (user.mfa_totp_enabled) mfaMethods.push({ method: 'totp', label: 'App Autenticadora (TOTP)' });
-    if (user.mfa_sms_enabled) mfaMethods.push({ method: 'sms', label: 'Código SMS' });
     if (user.mfa_whatsapp_enabled) mfaMethods.push({ method: 'whatsapp', label: 'Código por WhatsApp' });
     if (user.mfa_email_enabled) mfaMethods.push({ method: 'email', label: 'Código por Email' });
 
@@ -725,10 +600,8 @@ async function handleAPI(req, res, pathname) {
     let verified = false;
     if (method === 'totp') {
       verified = verifyTOTP(user.mfa_totp_secret, String(otp).trim());
-    } else if (method === 'sms') {
-      verified = verifyOTP(`sms_verify:${user.phone}`, String(otp).trim());
     } else if (method === 'whatsapp') {
-      verified = verifyOTP(`sms_verify:${user.phone}`, String(otp).trim());
+      verified = verifyOTP(`whatsapp_verify:${user.phone}`, String(otp).trim());
     } else if (method === 'email') {
       verified = verifyOTP(`email_verify:${user.email}`, String(otp).trim());
     } else {
@@ -739,7 +612,6 @@ async function handleAPI(req, res, pathname) {
 
     const activeMethods = [];
     if (user.mfa_totp_enabled) activeMethods.push('totp');
-    if (user.mfa_sms_enabled) activeMethods.push('sms');
     if (user.mfa_whatsapp_enabled) activeMethods.push('whatsapp');
     if (user.mfa_email_enabled) activeMethods.push('email');
 
@@ -789,7 +661,7 @@ async function handleAPI(req, res, pathname) {
     if (!user) return sendError(res, 404, 'Usuario no encontrado', 'USER_NOT_FOUND');
 
     const body = await parseBody(req);
-    const { destination, type } = body; // type: 'email' or 'sms', destination: email or phone
+    const { destination, type } = body; // type: 'email' or 'whatsapp', destination: email or phone
 
     if (!destination || !type) return sendError(res, 400, 'destination y type son obligatorios', 'MISSING_FIELDS');
 
@@ -815,34 +687,9 @@ async function handleAPI(req, res, pathname) {
           <p style="color:#64748b;font-size:11px;">Este código expira en 5 minutos.</p>
         </div>`;
       await sendEmail(destination, '📧 Código de verificación', `Tu código OTP es: ${code}`, html);
-    } else if (type === 'sms') {
-      if (!validatePhone(destination)) return sendError(res, 400, 'Teléfono inválido', 'INVALID_PHONE');
-      otpStore.set(`sms_verify:${destination}`, { code, expires: Date.now() + OTP_EXPIRY, attempts: 0 });
-      log('INFO', '📱 SMS OTP sent', { to: destination, code });
-      console.log(`\n  ┌────────────────────────────────────────┐`);
-      console.log(`  │  📱 Código SMS para ${destination.padEnd(22)} │`);
-      console.log(`  │  🔑 ${code.padEnd(37)} │`);
-      console.log(`  └────────────────────────────────────────┘\n`);
-      // Try Twilio SMS first, then TextMeBot WhatsApp, then email-to-SMS
-      let smsSent = false;
-      const twilioResult = await sendSmsViaTwilio(destination, code);
-      if (twilioResult.sent) { smsSent = true; }
-      else {
-        log('WARN', 'Twilio SMS failed, trying TextMeBot WhatsApp', { destination, reason: twilioResult.reason });
-        const waResult = await sendWhatsAppViaTextMeBot(destination, code);
-        if (waResult.sent) { smsSent = true; }
-        else {
-          log('WARN', 'TextMeBot also failed, trying email-to-SMS', { reason: waResult.reason });
-          const carrierId = body.carrierId || body.carrier || '';
-          const emailResult = await sendSmsViaEmail(destination, carrierId, code);
-          if (!emailResult.sent) {
-            log('WARN', 'All SMS delivery methods failed', { reason: emailResult.reason });
-          }
-        }
-      }
     } else if (type === 'whatsapp') {
       if (!validatePhone(destination)) return sendError(res, 400, 'Teléfono inválido', 'INVALID_PHONE');
-      otpStore.set(`sms_verify:${destination}`, { code, expires: Date.now() + OTP_EXPIRY, attempts: 0 });
+      otpStore.set(`${type}_verify:${destination}`, { code, expires: Date.now() + OTP_EXPIRY, attempts: 0 });
       log('INFO', '📱 WhatsApp OTP sent', { to: destination, code });
       console.log(`\n  ┌────────────────────────────────────────┐`);
       console.log(`  │  📱 WhatsApp OTP para ${destination.padEnd(18)} │`);
@@ -853,7 +700,7 @@ async function handleAPI(req, res, pathname) {
         log('WARN', 'TextMeBot WhatsApp failed', { destination, reason: waResult.reason });
       }
     } else {
-      return sendError(res, 400, 'Tipo inválido. Use email o sms', 'INVALID_TYPE');
+      return sendError(res, 400, 'Tipo inválido. Use email o whatsapp', 'INVALID_TYPE');
     }
 
     return sendJSON(res, 200, { success: true, message: `Código enviado a ${destination}`, code });
@@ -877,7 +724,7 @@ async function handleAPI(req, res, pathname) {
     // Mark contact as verified
     if (type === 'email') {
       db.updateUser(user.id, { email: destination.toLowerCase(), email_verified: true });
-    } else if (type === 'sms') {
+    } else if (type === 'whatsapp') {
       db.updateUser(user.id, { phone: destination, phone_verified: true });
     }
 
@@ -894,12 +741,12 @@ async function handleAPI(req, res, pathname) {
     if (!user) return sendError(res, 404, 'Usuario no encontrado', 'USER_NOT_FOUND');
 
     const body = await parseBody(req);
-    const { method, enabled } = body; // method: 'totp', 'sms', 'email', 'whatsapp'
+    const { method, enabled } = body; // method: 'totp', 'email', 'whatsapp'
 
-    if (!['totp', 'sms', 'email', 'whatsapp'].includes(method)) return sendError(res, 400, 'Método no válido. Use: totp, sms, email, whatsapp', 'INVALID_METHOD');
+    if (!['totp', 'email', 'whatsapp'].includes(method)) return sendError(res, 400, 'Método no válido. Use: totp, email, whatsapp', 'INVALID_METHOD');
 
     // Validate prerequisites
-    if ((method === 'sms' || method === 'whatsapp') && enabled) {
+    if (method === 'whatsapp' && enabled) {
       if (!user.phone || !user.phone_verified) return sendError(res, 400, 'Debes verificar un número de teléfono primero', 'PHONE_NOT_VERIFIED');
     }
     if (method === 'email' && enabled) {
@@ -911,7 +758,6 @@ async function handleAPI(req, res, pathname) {
       updates.mfa_totp_enabled = enabled;
       if (!enabled) updates.mfa_totp_secret = generateTOTPSecret(); // reset secret
     }
-    if (method === 'sms') updates.mfa_sms_enabled = enabled;
     if (method === 'whatsapp') updates.mfa_whatsapp_enabled = enabled;
     if (method === 'email') updates.mfa_email_enabled = enabled;
 
@@ -1154,46 +1000,11 @@ async function handleAPI(req, res, pathname) {
     if (!user) return sendError(res, 404, 'Usuario no encontrado', 'USER_NOT_FOUND');
 
     db.updateUser(user.id, {
-      mfa_totp_enabled: false, mfa_sms_enabled: false, mfa_email_enabled: false, mfa_whatsapp_enabled: false,
+      mfa_totp_enabled: false, mfa_email_enabled: false, mfa_whatsapp_enabled: false,
       mfa_totp_secret: generateTOTPSecret(),
     });
     log('INFO', 'Admin reset MFA for user', { admin_id: admin.id, target_id: userId });
     return sendJSON(res, 200, { success: true, message: 'MFA reseteado. El usuario deberá configurarlo nuevamente.', user: db._sanitizeUser(db.findUserById(user.id)) });
-  }
-
-  // ── GET /api/sms/carriers/ ──
-  if (pathname === '/api/sms/carriers/' && req.method === 'GET') {
-    const auth = getAuthUser(req);
-    if (!auth) return sendError(res, 401, 'No autorizado', 'UNAUTHORIZED');
-    return sendJSON(res, 200, { carriers: getSmsCarriers() });
-  }
-
-  // ── GET /api/admin/twilio-config/ ──
-  if (pathname === '/api/admin/twilio-config/') {
-    const admin = requireAdmin(req, res);
-    if (!admin) return;
-    if (req.method === 'GET') {
-      const cfg = getTwilioConfig();
-      return sendJSON(res, 200, { ...cfg, authToken: cfg.authToken ? '********' : '' });
-    }
-    if (req.method === 'PUT') {
-      const body = await parseBody(req);
-      const cfg = getTwilioConfig();
-      if (body.accountSid !== undefined) cfg.accountSid = body.accountSid;
-      if (body.authToken !== undefined && body.authToken !== '********') cfg.authToken = body.authToken;
-      if (body.fromNumber !== undefined) cfg.fromNumber = body.fromNumber;
-      if (body.whatsappFrom !== undefined) cfg.whatsappFrom = body.whatsappFrom;
-      saveTwilioConfig(cfg);
-      // Test connection
-      let testOk = false;
-      try {
-        const client = twilio(cfg.accountSid, cfg.authToken);
-        await client.api.accounts(cfg.accountSid).fetch();
-        testOk = true;
-      } catch (e) { log('WARN', 'Twilio test failed', { error: e.message }); }
-      return sendJSON(res, 200, { success: true, message: 'Configuración guardada' + (testOk ? '' : '. No se pudo conectar con Twilio. Revisa las credenciales.'), test_ok: testOk, ...cfg, authToken: '********' });
-    }
-    return sendError(res, 405, 'Método no permitido', 'METHOD_NOT_ALLOWED');
   }
 
   // ── GET /api/admin/textmebot-config/ ──
@@ -1253,10 +1064,10 @@ async function handleAPI(req, res, pathname) {
       endpoints: {
         register: { method: 'POST', path: '/api/accounts/register/', desc: 'Registrar usuario' },
         login: { method: 'POST', path: '/api/accounts/login/', desc: 'Iniciar sesión' },
-        verify_mfa: { method: 'POST', path: '/api/accounts/verify-mfa/', desc: 'Verificar MFA (totp/sms/email)' },
+        verify_mfa: { method: 'POST', path: '/api/accounts/verify-mfa/', desc: 'Verificar MFA (totp/whatsapp/email)' },
         profile: { method: 'GET', path: '/api/accounts/profile/', desc: 'Ver perfil', auth: true },
         update_profile: { method: 'PUT', path: '/api/accounts/profile/', desc: 'Actualizar perfil', auth: true },
-        send_otp: { method: 'POST', path: '/api/accounts/send-otp/', desc: 'Enviar OTP (email/sms)', auth: true },
+        send_otp: { method: 'POST', path: '/api/accounts/send-otp/', desc: 'Enviar OTP (email/whatsapp)', auth: true },
         verify_otp: { method: 'POST', path: '/api/accounts/verify-otp/', desc: 'Verificar OTP y confirmar contacto', auth: true },
         mfa_toggle: { method: 'POST', path: '/api/accounts/mfa/toggle/', desc: 'Activar/desactivar método MFA', auth: true },
         setup_totp: { method: 'POST', path: '/api/accounts/setup-totp/', desc: 'Obtener setup TOTP + QR', auth: true },
