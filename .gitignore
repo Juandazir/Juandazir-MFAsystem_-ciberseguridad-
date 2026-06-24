@@ -1,0 +1,8 @@
+node_modules/
+frontend/node_modules/
+database/
+database_data/
+*.log
+verify_app.py
+__pycache__/
+*.pyc

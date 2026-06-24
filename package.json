@@ -1,0 +1,9 @@
+{
+  "name": "mfa-auth-system",
+  "version": "2.0.0",
+  "private": true,
+  "description": "MFA Authentication System",
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}

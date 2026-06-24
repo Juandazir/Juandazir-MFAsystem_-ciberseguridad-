@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MFA Authentication System</title>
+<style>
+:root {
+  --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #a5b4fc;
+  --success: #10b981; --success-dark: #059669;
+  --danger: #ef4444; --danger-dark: #dc2626;
+  --warning: #f59e0b; --warning-dark: #d97706;
+  --info: #3b82f6;
+  --bg: #0f172a; --bg-card: #1e293b; --bg-input: #334155;
+  --text: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b;
+  --border: #334155; --border-focus: #6366f1;
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text); min-height:100vh;
+  display:flex; justify-content:center; align-items:center;
+  background-image: radial-gradient(ellipse at 10% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                    radial-gradient(ellipse at 90% 80%, rgba(16,185,129,0.1) 0%, transparent 50%);
+}
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.app { width:100%; max-width:440px; padding:16px; }
+.card {
+  background: var(--bg-card); border-radius: var(--radius);
+  padding: 32px; box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  animation: fadeIn 0.4s ease-out;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+@keyframes checkmark { 0% { transform:scale(0); } 50% { transform:scale(1.2); } 100% { transform:scale(1); } }
+
+.header { text-align:center; margin-bottom:24px; }
+.header .logo { font-size:40px; margin-bottom:8px; }
+.header h1 { font-size:1.4rem; font-weight:700; background:linear-gradient(135deg,var(--primary-light),var(--success)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header p { color:var(--text-secondary); font-size:0.85rem; margin-top:4px; }
+
+.steps { display:flex; justify-content:center; gap:6px; margin-bottom:24px; }
+.step {
+  width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:600; background:var(--bg-input); color:var(--text-muted);
+  transition:var(--transition); position:relative;
+}
+.step.active { background:var(--primary); color:#fff; box-shadow:0 0 12px rgba(99,102,241,0.4); }
+.step.done { background:var(--success); color:#fff; }
+.step + .step::before {
+  content:''; position:absolute; left:-9px; top:50%; width:6px; height:2px; background:var(--border);
+}
+
+.view { display:none; animation:slideUp 0.35s ease-out; }
+.view.active { display:block; }
+
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; margin-bottom:6px; font-size:13px; font-weight:500; color:var(--text-secondary); }
+.form-group input {
+  width:100%; padding:12px 14px; background:var(--bg-input); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--text); font-size:14px; transition:var(--transition);
+}
+.form-group input:focus { outline:none; border-color:var(--border-focus); box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
+.form-group input.error { border-color:var(--danger); }
+.form-group .hint { font-size:11px; color:var(--text-muted); margin-top:4px; }
+
+.password-strength { display:flex; gap:4px; margin-top:6px; }
+.password-strength .bar { flex:1; height:3px; border-radius:2px; background:var(--border); transition:var(--transition); }
+.password-strength .bar.weak { background:var(--danger); }
+.password-strength .bar.medium { background:var(--warning); }
+.password-strength .bar.strong { background:var(--success); }
+
+.btn {
+  width:100%; padding:12px; border:none; border-radius:var(--radius-sm);
+  font-size:14px; font-weight:600; cursor:pointer; transition:var(--transition);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn:active { transform:scale(0.98); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover:not(:disabled) { background:var(--primary-dark); box-shadow:0 4px 16px rgba(99,102,241,0.3); }
+.btn-success { background:var(--success); color:#fff; }
+.btn-success:hover:not(:disabled) { background:var(--success-dark); }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-danger:hover:not(:disabled) { background:var(--danger-dark); }
+.btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); }
+.btn-outline:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+
+.link { color:var(--primary-light); cursor:pointer; font-size:13px; text-decoration:none; }
+.link:hover { text-decoration:underline; }
+.link-row { text-align:center; margin-top:12px; font-size:13px; color:var(--text-secondary); }
+
+.toast-container { position:fixed; top:20px; right:20px; z-index:1000; display:flex; flex-direction:column; gap:8px; }
+.toast {
+  padding:12px 20px; border-radius:var(--radius-sm); font-size:13px; font-weight:500;
+  animation:slideUp 0.3s ease-out; max-width:380px;
+  display:flex; align-items:center; gap:10px; box-shadow:0 8px 24px rgba(0,0,0,0.3);
+}
+.toast-success { background:#065f46; color:#a7f3d0; border:1px solid #059669; }
+.toast-error { background:#7f1d1d; color:#fecaca; border:1px solid #dc2626; }
+.toast-info { background:#1e3a5f; color:#bfdbfe; border:1px solid #3b82f6; }
+.toast-warning { background:#78350f; color:#fde68a; border:1px solid #d97706; }
+.toast .close-btn { margin-left:auto; background:none; border:none; color:inherit; cursor:pointer; font-size:16px; opacity:0.7; }
+.toast .close-btn:hover { opacity:1; }
+
+.otp-input { text-align:center; font-size:28px; letter-spacing:10px; font-weight:700; padding:14px !important; }
+.otp-timer { text-align:center; margin-top:12px; }
+.otp-timer .countdown { font-size:32px; font-weight:700; color:var(--primary); }
+.otp-timer .countdown.warning { color:var(--warning); }
+.otp-timer .countdown.expired { color:var(--danger); animation:pulse 0.5s ease-in-out infinite; }
+.otp-timer .label { font-size:12px; color:var(--text-muted); }
+
+.qr-container { display:flex; flex-direction:column; align-items:center; margin:16px 0; padding:16px; background:var(--bg-input); border-radius:var(--radius-sm); }
+.qr-container canvas { border-radius:8px; background:#fff; }
+.qr-container .secret-box { font-family:monospace; font-size:12px; color:var(--text-secondary); background:var(--bg); padding:8px 12px; border-radius:4px; margin-top:10px; word-break:break-all; text-align:center; width:100%; }
+.qr-container .copy-btn { margin-top:6px; padding:4px 12px; font-size:11px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text-secondary); cursor:pointer; }
+.qr-container .copy-btn:hover { border-color:var(--primary); color:var(--primary); }
+
+.badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.badge-success { background:rgba(16,185,129,0.15); color:#6ee7b7; }
+.badge-danger { background:rgba(239,68,68,0.15); color:#fca5a5; }
+.badge-info { background:rgba(59,130,246,0.15); color:#93c5fd; }
+
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0; }
+.info-item { background:var(--bg-input); padding:12px; border-radius:var(--radius-sm); }
+.info-item .label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.info-item .value { font-size:14px; color:var(--text); margin-top:2px; font-weight:500; }
+.info-item.full { grid-column:1/-1; }
+
+.action-row { display:flex; gap:8px; margin-top:16px; }
+.action-row .btn { flex:1; }
+
+.spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
+.check-icon { display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:rgba(16,185,129,0.15); color:var(--success); font-size:28px; margin:0 auto 12px; animation:checkmark 0.5s ease-out; }
+
+@media (max-width:480px) { .app { padding:8px; } .card { padding:20px; } .info-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app">
+  <div class="card">
+    <div class="header">
+      <div class="logo">🔐</div>
+      <h1>Sistema de Autenticación MFA</h1>
+      <p>Inicia sesión de forma segura con verificación en dos pasos</p>
+    </div>
+
+    <div class="steps" id="steps">
+      <div class="step active" id="step1">1</div>
+      <div class="step" id="step2">2</div>
+      <div class="step" id="step3">3</div>
+    </div>
+
+    <!-- ======== LOGIN VIEW ======== -->
+    <div class="view active" id="viewLogin">
+      <h2 style="font-size:1.1rem;margin-bottom:16px;">Iniciar Sesión</h2>
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input type="email" id="loginEmail" placeholder="ejemplo@correo.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">Iniciar Sesión</button>
+      <div class="link-row">¿No tienes cuenta? <span class="link" onclick="showView('register')">Regístrate aquí</span></div>
+    </div>
+
+    <!-- ======== REGISTER VIEW ======== -->
+    <div class="view" id="viewRegister">
+      <h2 style="font-size:1.1rem;margin-bottom:16px;">Crear Cuenta</h2>
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input type="email" id="regEmail" placeholder="ejemplo@correo.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" oninput="checkPasswordStrength(this.value)">
+        <div class="password-strength" id="pwStrength"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <input type="password" id="regConfirm" placeholder="Repite la contraseña" autocomplete="new-password">
+      </div>
+      <button class="btn btn-success" id="regBtn" onclick="handleRegister()">Crear Cuenta</button>
+      <div class="link-row">¿Ya tienes cuenta? <span class="link" onclick="showView('login')">Inicia sesión</span></div>
+    </div>
+
+    <!-- ======== MFA VERIFY VIEW ======== -->
+    <div class="view" id="viewMfaVerify">
+      <h2 style="font-size:1.1rem;margin-bottom:16px;">Verificación de Dos Factores</h2>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">
+        Ingresa el código de 6 dígitos generado por tu aplicación autenticadora.
+      </p>
+      <div class="form-group">
+        <label>Código OTP</label>
+        <input type="text" id="mfaOtp" class="otp-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+      </div>
+      <div class="otp-timer" id="otpTimer">
+        <div class="countdown" id="countdown">--</div>
+        <div class="label">segundos restantes</div>
+      </div>
+      <button class="btn btn-success" id="mfaVerifyBtn" onclick="handleMfaVerify()">Verificar e Ingresar</button>
+      <div class="link-row"><span class="link" onclick="showView('login')">← Volver al inicio</span></div>
+      <div id="mfaError" style="margin-top:12px;display:none;" class="badge badge-danger" style="justify-content:center;padding:10px;"></div>
+    </div>
+
+    <!-- ======== DASHBOARD VIEW ======== -->
+    <div class="view" id="viewDashboard">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div class="check-icon">✓</div>
+        <h2 style="font-size:1.1rem;color:var(--success);">Autenticación Exitosa</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-item"><div class="label">ID</div><div class="value" id="dashId">-</div></div>
+        <div class="info-item"><div class="label">Email</div><div class="value" id="dashEmail">-</div></div>
+        <div class="info-item"><div class="label">MFA</div><div class="value"><span id="dashMfa" class="badge badge-success">Habilitado</span></div></div>
+        <div class="info-item"><div class="label">Creado</div><div class="value" id="dashCreated">-</div></div>
+        <div class="info-item full"><div class="label">Token</div><div class="value" style="font-size:10px;word-break:break-all;" id="dashToken">-</div></div>
+      </div>
+      <div class="action-row" id="dashActions">
+        <button class="btn btn-primary" id="dashSetupBtn" onclick="showView('mfaSetup')">⚙️ Configurar MFA</button>
+        <button class="btn btn-outline" onclick="handleLogout()">Cerrar Sesión</button>
+      </div>
+      <div id="dashSuccessMsg" style="display:none;text-align:center;margin-top:12px;padding:10px;background:rgba(16,185,129,0.1);border-radius:8px;border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;font-size:13px;">
+        ✅ MFA activo — tu cuenta está protegida con verificación en dos pasos
+      </div>
+    </div>
+
+    <!-- ======== MFA SETUP VIEW ======== -->
+    <div class="view" id="viewMfaSetup">
+      <h2 style="font-size:1.1rem;margin-bottom:16px;">Configurar MFA</h2>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
+        Escanea este código QR con tu aplicación autenticadora preferida
+        (Google Authenticator, Authy, Microsoft Authenticator, etc.)
+      </p>
+      <div class="qr-container" id="qrContainer">
+        <img id="qrImage" class="qr-image" alt="Código QR" style="width:200px;height:200px;border-radius:8px;background:#fff;">
+        <div class="secret-box" id="secretBox">-</div>
+        <button class="copy-btn" onclick="copySecret()">📋 Copiar clave secreta</button>
+        <button class="copy-btn" onclick="copyOtpauthUrl()" style="margin-top:4px;">🔗 Copiar URL OTPAuth</button>
+      </div>
+      <div class="form-group">
+        <label>Verifica escaneando el código QR e ingresando el código generado:</label>
+        <input type="text" id="setupOtp" class="otp-input" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+      </div>
+      <button class="btn btn-success" id="setupBtn" onclick="handleSetupMfa()">Verificar y Activar MFA</button>
+      <div class="link-row"><span class="link" onclick="showView('dashboard')">← Volver al Dashboard</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────
+const state = { userId: null, email: '', token: '', tempToken: '', mfaEnabled: false };
+const API = '';
+
+// ─── Toast System ──────────────────────────────────────────────
+function toast(message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toastContainer');
+  const icons = { success: '✓', error: '✗', info: 'ℹ', warning: '⚠' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${message}</span><button class="close-btn" onclick="this.parentElement.remove()">×</button>`;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(100px)'; el.style.transition = 'all 0.3s'; setTimeout(() => el.remove(), 300); }, duration);
+}
+
+// ─── View Management ───────────────────────────────────────────
+let currentView = 'login';
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const view = document.getElementById('view' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (view) view.classList.add('active');
+  currentView = name;
+
+  // Update steps
+  const steps = ['step1','step2','step3'];
+  const stepMap = { login:0, register:0, mfaVerify:1, dashboard:2, mfaSetup:2 };
+  const idx = stepMap[name] || 0;
+  steps.forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = 'step' + (i < idx ? ' done' : i === idx ? ' active' : '');
+  });
+
+  // Init specific views
+  if (name === 'mfaVerify') initMfaVerify();
+  if (name === 'mfaSetup') initMfaSetup();
+}
+document.querySelectorAll('.link').forEach(el => {
+  const match = el.textContent.match(/Regístrate|Inicia sesión|Volver|Dashboard|inicio/);
+  if (match) {
+    const targets = { Regístrate:'register', 'Inicia sesión':'login', Volver:'login', Dashboard:'dashboard', inicio:'login' };
+    const target = targets[match[0]];
+    if (target) el.onclick = () => showView(target);
+  }
+});
+
+// ─── Password Strength ─────────────────────────────────────────
+function checkPasswordStrength(pw) {
+  const bars = document.querySelectorAll('#pwStrength .bar');
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+  const labels = ['','',' Débil',' Media',' Fuerte',' Muy fuerte'];
+  bars.forEach((b,i) => {
+    b.className = 'bar' + (i < score ? (score <= 2 ? ' weak' : score <= 3 ? ' medium' : ' strong') : '');
+  });
+}
+
+// ─── API Helper ────────────────────────────────────────────────
+async function api(method, path, body, useToken = false) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (useToken && state.token) headers['Authorization'] = `Bearer ${state.token}`;
+  const res = await fetch(`${API}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json();
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ─── Register ──────────────────────────────────────────────────
+async function handleRegister() {
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const confirm = document.getElementById('regConfirm').value;
+  if (!email || !password || !confirm) return toast('Todos los campos son obligatorios', 'error');
+  if (password !== confirm) return toast('Las contraseñas no coinciden', 'error');
+  if (password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Formato de email inválido', 'error');
+
+  const btn = document.getElementById('regBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creando...';
+  const { ok, data } = await api('POST', '/api/accounts/register/', { email, password });
+  btn.disabled = false; btn.textContent = 'Crear Cuenta';
+  if (ok) { toast('Cuenta creada exitosamente', 'success'); document.getElementById('loginEmail').value = email; setTimeout(() => showView('login'), 1200); }
+  else toast(data.error || 'Error al crear cuenta', 'error');
+}
+
+// ─── Login ─────────────────────────────────────────────────────
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) return toast('Todos los campos son obligatorios', 'error');
+
+  const btn = document.getElementById('loginBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Iniciando...';
+  const { ok, status, data } = await api('POST', '/api/accounts/login/', { email, password });
+  btn.disabled = false; btn.textContent = 'Iniciar Sesión';
+
+  if (ok) {
+    if (data.mfa_required) {
+      state.userId = data.user_id;
+      state.email = email;
+      state.tempToken = data.temp_token || '';
+      showView('mfaVerify');
+      toast('Ingresa el código de tu app autenticadora', 'info');
+    } else if (data.access) {
+      state.token = data.access;
+      state.email = email;
+      if (data.user) { state.userId = data.user.id; state.mfaEnabled = data.user.mfa_enabled; }
+      enterDashboard(data);
+      toast('Inicio de sesión exitoso', 'success');
+    }
+  } else {
+    if (status === 423) { toast(`Cuenta bloqueada. Espera ${Math.ceil(data.retryAfter / 60)} min`, 'warning'); }
+    else toast(data.error || 'Credenciales inválidas', 'error');
+  }
+}
+
+// ─── MFA Verify ────────────────────────────────────────────────
+let otpInterval = null;
+function initMfaVerify() {
+  document.getElementById('mfaOtp').value = '';
+  document.getElementById('mfaOtp').focus();
+  if (otpInterval) clearInterval(otpInterval);
+  updateCountdown();
+  otpInterval = setInterval(updateCountdown, 1000);
+}
+function updateCountdown() {
+  const el = document.getElementById('countdown');
+  const remaining = 30 - (Math.floor(Date.now() / 1000) % 30);
+  el.textContent = remaining.toString().padStart(2, '0');
+  el.className = 'countdown' + (remaining <= 5 ? ' expired' : remaining <= 10 ? ' warning' : '');
+}
+
+async function handleMfaVerify() {
+  const otp = document.getElementById('mfaOtp').value.trim();
+  if (!otp || otp.length < 6) return toast('Ingresa un código OTP válido de 6 dígitos', 'error');
+
+  const btn = document.getElementById('mfaVerifyBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Verificando...';
+  const { ok, data } = await api('POST', '/api/accounts/verify-mfa/', { user_id: state.userId, otp });
+  btn.disabled = false; btn.textContent = 'Verificar e Ingresar';
+
+  if (ok && data.access) {
+    state.token = data.access;
+    if (data.user) { state.mfaEnabled = data.user.mfa_enabled; state.email = data.user.email; state.userId = data.user.id; }
+    if (otpInterval) clearInterval(otpInterval);
+    toast('MFA verificado correctamente', 'success');
+    document.getElementById('mfaVerifyBtn').textContent = '✓ Verificado';
+    setTimeout(() => enterDashboard(data), 600);
+  } else {
+    toast(data.error || 'Código OTP inválido', 'error');
+    document.getElementById('mfaOtp').value = '';
+    document.getElementById('mfaOtp').focus();
+  }
+}
+
+// ─── Dashboard ─────────────────────────────────────────────────
+function enterDashboard(data) {
+  document.getElementById('dashId').textContent = state.userId || '-';
+  document.getElementById('dashEmail').textContent = state.email;
+  document.getElementById('dashToken').textContent = (data.access || state.token).substring(0, 48) + '...';
+  const mfaEl = document.getElementById('dashMfa');
+  const setupBtn = document.getElementById('dashSetupBtn');
+  const successMsg = document.getElementById('dashSuccessMsg');
+  if (state.mfaEnabled) {
+    mfaEl.textContent = '✓ Habilitado'; mfaEl.className = 'badge badge-success';
+    setupBtn.textContent = '🔒 MFA Activo'; setupBtn.className = 'btn btn-success'; setupBtn.disabled = true;
+    successMsg.style.display = 'block';
+  } else {
+    mfaEl.textContent = '✗ Deshabilitado'; mfaEl.className = 'badge badge-danger';
+    setupBtn.textContent = '⚙️ Configurar MFA'; setupBtn.className = 'btn btn-primary'; setupBtn.disabled = false;
+    successMsg.style.display = 'none';
+  }
+  showView('dashboard');
+}
+
+function handleLogout() {
+  state.token = ''; state.userId = null; state.email = ''; state.tempToken = '';
+  document.getElementById('loginPassword').value = '';
+  if (otpInterval) clearInterval(otpInterval);
+  showView('login');
+  toast('Sesión cerrada', 'info');
+}
+
+// ─── MFA Setup ─────────────────────────────────────────────────
+async function initMfaSetup() {
+  const btn = document.getElementById('setupBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Cargando...';
+  const { ok, data } = await api('POST', '/api/accounts/setup-mfa/', {}, true);
+  btn.disabled = false; btn.textContent = 'Verificar y Activar MFA';
+
+  if (ok && data.secret) {
+    document.getElementById('secretBox').textContent = data.secret;
+    const qrImg = document.getElementById('qrImage');
+    qrImg.src = data.qr_data_url || '';
+    qrImg.style.display = data.qr_data_url ? 'block' : 'none';
+    if (data.qr_data_url) {
+      // Wait for image to load then show success
+      qrImg.onload = () => toast('Código QR generado correctamente', 'success');
+    }
+    state._otpauthUrl = data.otpauth_url || '';
+    document.getElementById('setupOtp').value = '';
+    document.getElementById('setupOtp').focus();
+  } else {
+    toast('Error al cargar configuración MFA', 'error');
+  }
+}
+
+function copySecret() {
+  const secret = document.getElementById('secretBox').textContent;
+  navigator.clipboard.writeText(secret).then(() => toast('Clave secreta copiada', 'success')).catch(() => toast('No se pudo copiar', 'error'));
+}
+
+function copyOtpauthUrl() {
+  if (state._otpauthUrl) {
+    navigator.clipboard.writeText(state._otpauthUrl).then(() => toast('URL OTPAuth copiada', 'success')).catch(() => toast('No se pudo copiar', 'error'));
+  } else {
+    toast('No hay URL disponible', 'error');
+  }
+}
+
+async function handleSetupMfa() {
+  const otp = document.getElementById('setupOtp').value.trim();
+  if (!otp || otp.length < 6) return toast('Ingresa un código OTP válido de 6 dígitos', 'error');
+
+  const btn = document.getElementById('setupBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Verificando...';
+  const { ok, data } = await api('POST', '/api/accounts/verify-setup/', { otp }, true);
+  btn.disabled = false; btn.textContent = 'Verificar y Activar MFA';
+
+  if (ok) {
+    state.mfaEnabled = true;
+    if (data.user) { state.userId = data.user.id; state.email = data.user.email; }
+    toast('✅ MFA configurado exitosamente', 'success');
+    setTimeout(() => {
+      document.getElementById('dashId').textContent = state.userId || '-';
+      document.getElementById('dashEmail').textContent = state.email;
+      document.getElementById('dashToken').textContent = state.token.substring(0, 48) + '...';
+      const mfaEl = document.getElementById('dashMfa');
+      mfaEl.textContent = '✓ Habilitado';
+      mfaEl.className = 'badge badge-success';
+      showView('dashboard');
+    }, 1000);
+  } else {
+    toast(data.error || 'Error al verificar MFA', 'error');
+  }
+}
+
+// ─── Init on page load ────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginEmail').focus();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - ./database_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: mfa_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/mfa_db
+      - DJANGO_DEBUG=True
+      - DJANGO_SECRET_KEY=django-insecure-mfa-academic-secret-key-2026
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      - WDS_SOCKET_PORT=0
