@@ -18,7 +18,7 @@ Sistema de autenticación multifactor (MFA) con soporte para TOTP, SMS, WhatsApp
 | Hash contraseñas | scrypt (Node.js `crypto`)                  |
 | TOTP             | RFC 6238, HMAC-SHA1, 6 dígitos, ±2 ventanas|
 | Email            | Nodemailer (SMTP)                          |
-| SMS/WhatsApp     | Twilio SDK + CallMeBot API + email-to-SMS  |
+| SMS/WhatsApp     | Twilio SDK + TextMeBot API + email-to-SMS  |
 | QR               | `qrcode` npm package                       |
 | Frontend         | HTML+CSS+JS vanilla (SPA, ~1400 líneas)    |
 
@@ -197,13 +197,13 @@ Implementación manual con `Map` y limpieza periódica cada 5 minutos.
 Cadena de entrega para SMS:
 
 ```
-Twilio SMS → Twilio WhatsApp → CallMeBot (free) → email-to-SMS gateway → consola (fallback)
+Twilio SMS → TextMeBot WhatsApp → email-to-SMS gateway → consola (fallback)
 ```
 
 Cadena de entrega para WhatsApp:
 
 ```
-Twilio WhatsApp → CallMeBot (free) → consola (fallback)
+TextMeBot → consola (fallback)
 ```
 
 Cada eslabón registra éxito/fallo en logs. El código siempre se muestra en consola y en el frontend (modo desarrollo).
@@ -304,8 +304,8 @@ LOGIN (con MFA)
 | PUT    | `/api/admin/email-config/`       | Admin      | Guardar config SMTP                  |
 | GET    | `/api/admin/twilio-config/`      | Admin      | Obtener config Twilio                |
 | PUT    | `/api/admin/twilio-config/`      | Admin      | Guardar config Twilio                |
-| GET    | `/api/admin/callmebot-config/`   | Admin      | Obtener config CallMeBot             |
-| PUT    | `/api/admin/callmebot-config/`   | Admin      | Guardar config CallMeBot             |
+| GET    | `/api/admin/textmebot-config/`   | Admin      | Obtener config TextMeBot             |
+| PUT    | `/api/admin/textmebot-config/`   | Admin      | Guardar config TextMeBot             |
 
 ---
 
